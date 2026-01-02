@@ -1,0 +1,21 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Support Board</title>
+    {% if css_file %}
+        <link rel="stylesheet" href="{% static 'support_board/' %}{{ css_file }}">
+    {% endif %}
+</head>
+<body>
+    <div id="root"></div>
+    {% if js_file %}
+        <script type="module" src="{% static 'support_board/' %}{{ js_file }}"></script>
+    {% else %}
+        <!-- Development mode: React dev server -->
+        <script type="module" src="http://localhost:5173/src/main.jsx"></script>
+    {% endif %}
+</body>
+</html>
