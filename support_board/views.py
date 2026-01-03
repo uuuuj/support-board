@@ -1,26 +1,26 @@
+from django.http import HttpRequest, HttpResponse
 from django.shortcuts import render
-from django.conf import settings
-import json
-from pathlib import Path
+
+from .services import ViteManifestService
 
 
-def index(request):
-    """Serve the React SPA"""
-    manifest_path = Path(settings.BASE_DIR) / 'support_board' / 'static' / 'support_board' / '.vite' / 'manifest.json'
+def index(request: HttpRequest) -> HttpResponse:
+    """React SPA를 서빙하는 뷰.
 
-    js_file = None
-    css_file = None
+    Vite manifest를 파싱하여 빌드된 JS/CSS 파일 경로를 템플릿에 전달합니다.
+    manifest가 없는 경우(개발 모드) React dev server를 사용합니다.
 
-    if manifest_path.exists():
-        with open(manifest_path) as f:
-            manifest = json.load(f)
-            entry = manifest.get('src/main.jsx', {})
-            js_file = entry.get('file')
-            css_files = entry.get('css', [])
-            css_file = css_files[0] if css_files else None
+    Args:
+        request: HTTP 요청 객체.
+
+    Returns:
+        HttpResponse: 렌더링된 index.html 템플릿.
+    """
+    manifest_service = ViteManifestService()
+    entry = manifest_service.get_entry()
 
     context = {
-        'js_file': js_file,
-        'css_file': css_file,
+        'js_file': entry.js_file,
+        'css_file': entry.css_file,
     }
     return render(request, 'support_board/index.html', context)
