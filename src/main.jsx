@@ -2,7 +2,95 @@ import React, { useState } from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
 // 아이콘 라이브러리가 설치되어 있어야 합니다. (터미널에: npm install lucide-react)
-import { MessageSquare, ChevronLeft, ChevronRight, ArrowLeft, MoreHorizontal } from 'lucide-react';
+import { MessageSquare, ChevronLeft, ChevronRight, ArrowLeft, MoreHorizontal, Plus, X } from 'lucide-react';
+
+// 게시글 작성 컴포넌트
+const PostCreate = ({ onBack, onSubmit }) => {
+  const [title, setTitle] = useState('');
+  const [content, setContent] = useState('');
+  const [author, setAuthor] = useState('');
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!title.trim() || !content.trim() || !author.trim()) {
+      alert('모든 필드를 입력해주세요.');
+      return;
+    }
+    onSubmit({ title, content, author });
+  };
+
+  return (
+    <div className="min-h-screen bg-white font-sans">
+      {/* Header */}
+      <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4">
+        <div className="max-w-4xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={onBack}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <X size={20} className="text-gray-600" />
+            </button>
+            <span className="font-semibold text-gray-900">새 게시글 작성</span>
+          </div>
+          <button
+            onClick={handleSubmit}
+            className="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+          >
+            게시하기
+          </button>
+        </div>
+      </div>
+
+      {/* Form */}
+      <div className="max-w-4xl mx-auto px-6 py-8">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Author */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              작성자
+            </label>
+            <input
+              type="text"
+              value={author}
+              onChange={(e) => setAuthor(e.target.value)}
+              placeholder="이름을 입력하세요"
+              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+            />
+          </div>
+
+          {/* Title */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              제목
+            </label>
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="제목을 입력하세요"
+              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+            />
+          </div>
+
+          {/* Content */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              내용
+            </label>
+            <textarea
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              placeholder="내용을 입력하세요"
+              rows={12}
+              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none"
+            />
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
 
 // 더미 댓글 데이터
 const dummyComments = [
@@ -153,20 +241,33 @@ const PostDetail = ({ post, onBack }) => {
 };
 
 const BoardList = () => {
-  // 1. 상태 관리: 현재 페이지, 선택된 포스트
+  // 1. 상태 관리: 현재 페이지, 선택된 포스트, 작성 모드
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedPost, setSelectedPost] = useState(null);
+  const [isCreating, setIsCreating] = useState(false);
   const itemsPerPage = 9;
 
   // 2. 더미 데이터 생성 (페이지네이션 테스트를 위해 24개 생성)
-  const posts = Array.from({ length: 24 }, (_, i) => ({
+  const [posts, setPosts] = useState(Array.from({ length: 24 }, (_, i) => ({
     id: i + 1,
     author: i % 2 === 0 ? "Ami Asadi" : "Mo Mayeri",
     date: `${i + 1} days ago`,
     title: `Update Log #${i + 1}: Enhanced Features`,
     content: "We've tightened the experience across the board: clearer language, dependable emails, smarter moderation, and worked on performance. Native Events is about to land with end-to-end creation tools.",
     comments: Math.floor(Math.random() * 20),
-  }));
+  })));
+
+  // 새 게시글 작성 핸들러
+  const handleCreatePost = (newPost) => {
+    const post = {
+      id: posts.length + 1,
+      ...newPost,
+      date: 'Just now',
+      comments: 0,
+    };
+    setPosts([post, ...posts]);
+    setIsCreating(false);
+  };
 
   // 3. 페이지네이션 로직
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -184,6 +285,11 @@ const BoardList = () => {
     setSelectedPost(post);
     window.scrollTo(0, 0);
   };
+
+  // 작성 페이지 렌더링
+  if (isCreating) {
+    return <PostCreate onBack={() => setIsCreating(false)} onSubmit={handleCreatePost} />;
+  }
 
   // 상세페이지가 선택되면 PostDetail 렌더링
   if (selectedPost) {
@@ -206,10 +312,14 @@ const BoardList = () => {
               Events
             </button>
           </div>
-          
-          <a href="#" className="text-emerald-600 text-sm font-medium hover:underline">
-            View all
-          </a>
+
+          <button
+            onClick={() => setIsCreating(true)}
+            className="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+          >
+            <Plus size={18} />
+            글쓰기
+          </button>
         </div>
 
         {/* Grid Container */}
