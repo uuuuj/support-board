@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
 // 아이콘 라이브러리가 설치되어 있어야 합니다. (터미널에: npm install lucide-react)
-import { MessageSquare, ChevronLeft, ChevronRight, ArrowLeft, MoreHorizontal, Plus, X } from 'lucide-react';
+import { MessageSquare, ChevronLeft, ChevronRight, ArrowLeft, MoreHorizontal, Plus, X, Search, Filter, ChevronDown } from 'lucide-react';
 
 // 게시글 작성 컴포넌트
 const PostCreate = ({ onBack, onSubmit }) => {
@@ -316,33 +316,125 @@ const PostDetail = ({ post, onBack }) => {
   );
 };
 
+// API 기본 URL
+const API_BASE = '/support/api';
+
+// 날짜 포맷 함수
+const formatDate = (dateString) => {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffMs = now - date;
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  if (diffDays === 0) return 'Today';
+  if (diffDays === 1) return 'Yesterday';
+  if (diffDays < 7) return `${diffDays} days ago`;
+  if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
+  return `${Math.floor(diffDays / 30)} months ago`;
+};
+
 const BoardList = () => {
   // 1. 상태 관리: 현재 페이지, 선택된 포스트, 작성 모드
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedPost, setSelectedPost] = useState(null);
   const [isCreating, setIsCreating] = useState(false);
+  const [loading, setLoading] = useState(true);
   const itemsPerPage = 9;
 
-  // 2. 더미 데이터 생성 (페이지네이션 테스트를 위해 24개 생성)
-  const [posts, setPosts] = useState(Array.from({ length: 24 }, (_, i) => ({
-    id: i + 1,
-    author: i % 2 === 0 ? "Ami Asadi" : "Mo Mayeri",
-    date: `${i + 1} days ago`,
-    title: `Update Log #${i + 1}: Enhanced Features`,
-    content: "We've tightened the experience across the board: clearer language, dependable emails, smarter moderation, and worked on performance. Native Events is about to land with end-to-end creation tools.",
-    comments: Math.floor(Math.random() * 20),
-  })));
+  // 검색 상태
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterType, setFilterType] = useState('all'); // all, title, content, author, tag
+  const [showFilterDropdown, setShowFilterDropdown] = useState(false);
+
+  // 게시글 상태
+  const [posts, setPosts] = useState([]);
+
+  // API에서 게시글 목록 가져오기
+  const fetchPosts = async (query = '', filter = 'all') => {
+    setLoading(true);
+    try {
+      let url = `${API_BASE}/posts/`;
+      const params = new URLSearchParams();
+
+      if (query) {
+        if (filter === 'all') {
+          params.append('q', query);
+        } else {
+          params.append(filter, query);
+        }
+      }
+
+      if (params.toString()) {
+        url += `?${params.toString()}`;
+      }
+
+      const response = await fetch(url);
+      const data = await response.json();
+
+      // API 응답을 프론트엔드 형식으로 변환
+      const formattedPosts = data.posts.map(post => ({
+        ...post,
+        date: formatDate(post.created_at),
+        comments: post.comments_count || 0,
+      }));
+
+      setPosts(formattedPosts);
+    } catch (error) {
+      console.error('Failed to fetch posts:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 컴포넌트 마운트 시 게시글 가져오기
+  useEffect(() => {
+    fetchPosts();
+  }, []);
+
+  // 검색 실행 (디바운스 적용)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchPosts(searchQuery, filterType);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery, filterType]);
+
+  const filterOptions = [
+    { value: 'all', label: '전체' },
+    { value: 'title', label: '제목' },
+    { value: 'content', label: '내용' },
+    { value: 'author', label: '작성자' },
+    { value: 'tag', label: '태그' },
+  ];
 
   // 새 게시글 작성 핸들러
-  const handleCreatePost = (newPost) => {
-    const post = {
-      id: posts.length + 1,
-      ...newPost,
-      date: 'Just now',
-      comments: 0,
-    };
-    setPosts([post, ...posts]);
-    setIsCreating(false);
+  const handleCreatePost = async (newPost) => {
+    try {
+      const response = await fetch(`${API_BASE}/posts/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: newPost.title,
+          content: newPost.content,
+          author: newPost.author || 'Anonymous',
+          tags: newPost.tags || [],
+          is_resolved: newPost.is_resolved || false,
+        }),
+      });
+
+      if (response.ok) {
+        // 게시글 목록 새로고침
+        fetchPosts(searchQuery, filterType);
+        setIsCreating(false);
+      } else {
+        alert('게시글 작성에 실패했습니다.');
+      }
+    } catch (error) {
+      console.error('Failed to create post:', error);
+      alert('게시글 작성에 실패했습니다.');
+    }
   };
 
   // 3. 페이지네이션 로직
@@ -350,6 +442,12 @@ const BoardList = () => {
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentPosts = posts.slice(indexOfFirstItem, indexOfLastItem);
   const totalPages = Math.ceil(posts.length / itemsPerPage);
+
+  // 검색 시 페이지 초기화
+  const handleSearch = (query) => {
+    setSearchQuery(query);
+    setCurrentPage(1);
+  };
 
   // 페이지 변경 핸들러
   const handlePageChange = (pageNumber) => {
@@ -379,6 +477,67 @@ const BoardList = () => {
         {/* Header Section */}
         <h1 className="text-2xl font-bold mb-6 text-gray-900">What's new</h1>
         
+        {/* Search Bar */}
+        <div className="flex items-center gap-3 mb-6">
+          {/* Filter Dropdown */}
+          <div className="relative">
+            <button
+              onClick={() => setShowFilterDropdown(!showFilterDropdown)}
+              className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+            >
+              <Filter size={16} />
+              {filterOptions.find(opt => opt.value === filterType)?.label}
+              <ChevronDown size={16} />
+            </button>
+            {showFilterDropdown && (
+              <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 min-w-[120px]">
+                {filterOptions.map(option => (
+                  <button
+                    key={option.value}
+                    onClick={() => {
+                      setFilterType(option.value);
+                      setShowFilterDropdown(false);
+                      setCurrentPage(1);
+                    }}
+                    className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 first:rounded-t-lg last:rounded-b-lg ${
+                      filterType === option.value ? 'bg-emerald-50 text-emerald-600' : 'text-gray-700'
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Search Input */}
+          <div className="relative flex-1 max-w-md">
+            <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => handleSearch(e.target.value)}
+              placeholder="검색어를 입력하세요..."
+              className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => handleSearch('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                <X size={16} />
+              </button>
+            )}
+          </div>
+
+          {/* Results Count */}
+          {searchQuery && (
+            <span className="text-sm text-gray-500">
+              {posts.length}개 결과
+            </span>
+          )}
+        </div>
+
         <div className="flex justify-between items-center mb-8">
           <div className="flex gap-4 items-center">
             <button className="bg-gray-900 hover:bg-gray-800 text-white px-5 py-2 rounded-full text-sm font-medium transition-colors">
@@ -399,41 +558,68 @@ const BoardList = () => {
         </div>
 
         {/* Grid Container */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
-          {currentPosts.map((post) => (
-            <div
-              key={post.id}
-              onClick={() => handlePostClick(post)}
-              className="bg-white rounded-xl p-6 border border-gray-100 hover:border-gray-300 transition-all flex flex-col h-[320px] shadow-md shadow-gray-200 hover:shadow-lg hover:shadow-gray-300 cursor-pointer"
-            >
-              {/* Author Info */}
-              <div className="flex items-center gap-3 mb-4">
-                <div className="flex flex-col">
-                  <span className="text-sm font-semibold text-gray-900">{post.author}</span>
-                  <span className="text-xs text-gray-500">{post.date}</span>
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-20 text-gray-500">
+            <div className="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+            <p className="text-sm">로딩 중...</p>
+          </div>
+        ) : posts.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20 text-gray-500">
+            <Search size={48} className="mb-4 text-gray-300" />
+            <p className="text-lg font-medium">{searchQuery ? '검색 결과가 없습니다' : '게시글이 없습니다'}</p>
+            <p className="text-sm mt-1">{searchQuery ? '다른 검색어를 입력해보세요' : '첫 게시글을 작성해보세요!'}</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
+            {currentPosts.map((post) => (
+              <div
+                key={post.id}
+                onClick={() => handlePostClick(post)}
+                className="bg-white rounded-xl p-6 border border-gray-100 hover:border-gray-300 transition-all flex flex-col h-[320px] shadow-md shadow-gray-200 hover:shadow-lg hover:shadow-gray-300 cursor-pointer"
+              >
+                {/* Author Info */}
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="flex flex-col">
+                    <span className="text-sm font-semibold text-gray-900">{post.author}</span>
+                    <span className="text-xs text-gray-500">{post.date}</span>
+                  </div>
+                </div>
+
+                {/* Tags */}
+                {post.tags && post.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mb-3">
+                    {post.tags.slice(0, 3).map((tag, idx) => (
+                      <span
+                        key={idx}
+                        className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                {/* Content */}
+                <h3 className="text-lg font-bold text-gray-900 mb-3 leading-snug truncate">
+                  {post.title}
+                </h3>
+                <p className="text-gray-600 text-sm leading-relaxed mb-6 line-clamp-3 flex-grow">
+                  {post.content}
+                </p>
+
+                {/* Footer */}
+                <div className="mt-auto flex items-center justify-between pt-4 border-t border-gray-100">
+                  <span className="text-xs text-gray-500 font-medium">Read update</span>
+
+                  <div className="flex items-center gap-2 text-gray-500 hover:text-gray-900 transition-colors cursor-pointer">
+                    <MessageSquare size={16} />
+                    <span className="text-xs font-medium">{post.comments}</span>
+                  </div>
                 </div>
               </div>
-
-              {/* Content */}
-              <h3 className="text-lg font-bold text-gray-900 mb-3 leading-snug truncate">
-                {post.title}
-              </h3>
-              <p className="text-gray-600 text-sm leading-relaxed mb-6 line-clamp-4 flex-grow">
-                {post.content}
-              </p>
-
-              {/* Footer */}
-              <div className="mt-auto flex items-center justify-between pt-4 border-t border-gray-100">
-                 <span className="text-xs text-gray-500 font-medium">Read update</span>
-
-                <div className="flex items-center gap-2 text-gray-500 hover:text-gray-900 transition-colors cursor-pointer">
-                  <MessageSquare size={16} />
-                  <span className="text-xs font-medium">{post.comments}</span>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
 
         {/* Pagination Controls */}
         {totalPages > 1 && (
