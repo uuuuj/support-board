@@ -1,4 +1,4 @@
-sesrvices:
+services:
   web:
     build: .
     ports:
