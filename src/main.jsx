@@ -8,83 +8,159 @@ import { MessageSquare, ChevronLeft, ChevronRight, ArrowLeft, MoreHorizontal, Pl
 const PostCreate = ({ onBack, onSubmit }) => {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
-  const [author, setAuthor] = useState('');
+  const [resolved, setResolved] = useState(false);
+  const [tags, setTags] = useState('');
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!title.trim() || !content.trim() || !author.trim()) {
-      alert('모든 필드를 입력해주세요.');
+    if (!title.trim() || !content.trim()) {
+      alert('제목과 내용을 입력해주세요.');
       return;
     }
-    onSubmit({ title, content, author });
+    onSubmit({ title, content, author: 'Anonymous' });
   };
 
   return (
-    <div className="min-h-screen bg-white font-sans">
-      {/* Header */}
-      <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4">
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={onBack}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              <X size={20} className="text-gray-600" />
-            </button>
-            <span className="font-semibold text-gray-900">새 게시글 작성</span>
-          </div>
+    <div className="min-h-screen bg-gray-100 font-sans flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-sm max-w-2xl w-full p-8">
+        {/* Header */}
+        <div className="flex items-center gap-3 mb-8">
           <button
-            onClick={handleSubmit}
-            className="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+            onClick={onBack}
+            className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
           >
-            게시하기
+            <ArrowLeft size={20} className="text-gray-600" />
           </button>
+          <h1 className="text-lg font-semibold text-gray-900">Create a new question</h1>
         </div>
-      </div>
 
-      {/* Form */}
-      <div className="max-w-4xl mx-auto px-6 py-8">
+        {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Author */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              작성자
-            </label>
-            <input
-              type="text"
-              value={author}
-              onChange={(e) => setAuthor(e.target.value)}
-              placeholder="이름을 입력하세요"
-              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-            />
-          </div>
-
           {/* Title */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              제목
+            <label className="block text-sm font-semibold text-gray-900 mb-2">
+              Title
             </label>
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="제목을 입력하세요"
               className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
             />
           </div>
 
           {/* Content */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              내용
+            <label className="block text-sm font-semibold text-gray-900 mb-2">
+              Content
             </label>
-            <textarea
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              placeholder="내용을 입력하세요"
-              rows={12}
-              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none"
-            />
+            <div className="border border-gray-200 rounded-lg overflow-hidden">
+              <textarea
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                placeholder="What are your thoughts?"
+                rows={8}
+                className="w-full px-4 py-3 focus:outline-none resize-none"
+              />
+              {/* Toolbar */}
+              <div className="flex items-center gap-1 px-3 py-2 border-t border-gray-100">
+                <button type="button" className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                  <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                </button>
+                <button type="button" className="p-2 hover:bg-gray-100 rounded-lg transition-colors text-gray-500 font-semibold text-sm">
+                  Aa
+                </button>
+                <button type="button" className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                  <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10" strokeWidth={2} />
+                    <path strokeLinecap="round" strokeWidth={2} d="M8 14s1.5 2 4 2 4-2 4-2" />
+                    <circle cx="9" cy="9" r="1" fill="currentColor" />
+                    <circle cx="15" cy="9" r="1" fill="currentColor" />
+                  </svg>
+                </button>
+                <button type="button" className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                  <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <rect x="3" y="3" width="18" height="18" rx="2" strokeWidth={2} />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 15l5-5 4 4 5-5 4 4" />
+                  </svg>
+                </button>
+                <button type="button" className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                  <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Resolved Toggle */}
+          <div className="flex items-center justify-between py-2">
+            <span className="text-sm font-semibold text-gray-900">Resolved</span>
+            <button
+              type="button"
+              onClick={() => setResolved(!resolved)}
+              className={`w-12 h-7 rounded-full transition-colors ${resolved ? 'bg-emerald-500' : 'bg-gray-200'}`}
+            >
+              <div className={`w-5 h-5 bg-white rounded-full shadow-sm transition-transform ${resolved ? 'translate-x-6' : 'translate-x-1'}`} />
+            </button>
+          </div>
+
+          {/* Tags */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-900 mb-2">
+              Tags
+            </label>
+            <div className="relative">
+              <input
+                type="text"
+                value={tags}
+                onChange={(e) => setTags(e.target.value)}
+                placeholder="Add tags..."
+                className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent pr-10"
+              />
+              <ChevronRight size={18} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 rotate-90" />
+            </div>
+          </div>
+
+          {/* SEO Options */}
+          <div className="flex items-center justify-between py-3 border-t border-gray-100">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-semibold text-gray-900">SEO options</span>
+              <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+              </svg>
+            </div>
+            <Plus size={18} className="text-gray-400" />
+          </div>
+
+          {/* Advanced Options */}
+          <div className="flex items-center justify-between py-3 border-t border-gray-100">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-semibold text-gray-900">Advanced options</span>
+              <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+              </svg>
+            </div>
+            <Plus size={18} className="text-gray-400" />
+          </div>
+
+          {/* Buttons */}
+          <div className="flex items-center justify-end gap-3 pt-4">
+            <button
+              type="button"
+              onClick={onBack}
+              className="px-6 py-2.5 border border-gray-200 rounded-full text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="px-6 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-full text-sm font-medium transition-colors"
+            >
+              Publish
+            </button>
           </div>
         </form>
       </div>
