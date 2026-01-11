@@ -42,13 +42,15 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY config/ ./config/
 COPY support_board/ ./support_board/
 COPY manage.py ./
+COPY entrypoint.sh ./
 
 # Copy built frontend from Stage 1
 COPY --from=frontend-builder /app/support_board/static/support_board ./support_board/static/support_board
 
-# Collect static files
-RUN python manage.py collectstatic --noinput || true
+# Make entrypoint executable
+RUN chmod +x entrypoint.sh
 
 EXPOSE 8000
 
+ENTRYPOINT ["./entrypoint.sh"]
 CMD ["gunicorn", "--bind", "0.0.0.0:8000", "config.wsgi:application"]
