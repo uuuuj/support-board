@@ -1,8 +1,11 @@
-services:
+sesrvices:
   web:
     build: .
     ports:
       - "8000:8000"
     volumes:
-      - ./.env:/app/.env:ro
+      - ./.env:/app/.env:ro              # 환경변수 (읽기전용)
+      - ./config:/app/config             # Django 설정
+      - ./support_board:/app/support_board  # Django 앱
+      - ./manage.py:/app/manage.py       # manage.py
     restart: unless-stopped
