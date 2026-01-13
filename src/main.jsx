@@ -727,9 +727,11 @@ const BoardList = () => {
 export default BoardList;
 export { PostCreate, PostDetail };
 
-// 화면에 렌더링
-ReactDOM.createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
-    <BoardList />
-  </React.StrictMode>
-);
+// 화면에 렌더링 (테스트 환경에서는 실행하지 않음)
+if (typeof document !== 'undefined' && document.getElementById('root')) {
+  ReactDOM.createRoot(document.getElementById('root')).render(
+    <React.StrictMode>
+      <BoardList />
+    </React.StrictMode>
+  );
+}
