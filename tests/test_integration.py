@@ -16,6 +16,26 @@ from django.test import TestCase, Client
 from support_board.models import User, Post
 
 
+class TestResults:
+    """테스트 결과 저장"""
+    items = []
+
+    @classmethod
+    def add(cls, name, status):
+        cls.items.append((name, status))
+
+    @classmethod
+    def print_summary(cls):
+        print("\n" + "=" * 50)
+        print("통합 테스트 결과 요약")
+        print("=" * 50)
+        for name, status in cls.items:
+            icon = "PASS" if status == "PASS" else "FAIL"
+            print(f"[{icon}] {name}")
+        print("=" * 50)
+        cls.items = []
+
+
 class MockWebSocketServer:
     """테스트용 Mock WebSocket 서버."""
 
@@ -99,7 +119,12 @@ class WebSocketClientTest(UnitTestCase):
                 self.assertEqual(data['status'], 'success')
                 self.assertEqual(data['data']['username'], '통합테스트유저')
 
-        asyncio.get_event_loop().run_until_complete(test())
+        try:
+            asyncio.get_event_loop().run_until_complete(test())
+            TestResults.add("test_websocket_connection", "PASS")
+        except AssertionError:
+            TestResults.add("test_websocket_connection", "FAIL")
+            raise
 
 
 class IntegrationFlowTest(TestCase):
@@ -111,7 +136,6 @@ class IntegrationFlowTest(TestCase):
 
     def test_full_flow_user_sync_to_private_post(self):
         """유저 동기화 → 비밀글 생성 전체 흐름."""
-        # 1. 유저 동기화
         user_data = {
             'user_id': str(uuid.uuid4()),
             'username': '통합테스트유저',
@@ -122,41 +146,44 @@ class IntegrationFlowTest(TestCase):
             json.dumps(user_data),
             content_type='application/json'
         )
-        self.assertEqual(sync_response.status_code, 201)
 
-        # 2. 세션 확인
-        me_response = self.client.get('/support/api/users/me/')
-        self.assertEqual(me_response.status_code, 200)
-        result = me_response.json()
-        self.assertEqual(result['username'], '통합테스트유저')
+        try:
+            self.assertEqual(sync_response.status_code, 201)
 
-        # 3. 비밀글 생성
-        post_data = {
-            'title': '비밀글 테스트',
-            'content': '비밀 내용입니다.',
-            'author': '통합테스트유저',
-            'is_private': True,
-        }
-        post_response = self.client.post(
-            '/support/api/posts/create/',
-            json.dumps(post_data),
-            content_type='application/json'
-        )
-        self.assertEqual(post_response.status_code, 201)
-        post_result = post_response.json()
-        self.assertTrue(post_result['is_private'])
+            me_response = self.client.get('/support/api/users/me/')
+            self.assertEqual(me_response.status_code, 200)
+            result = me_response.json()
+            self.assertEqual(result['username'], '통합테스트유저')
 
-        post_id = post_result['id']
+            post_data = {
+                'title': '비밀글 테스트',
+                'content': '비밀 내용입니다.',
+                'author': '통합테스트유저',
+                'is_private': True,
+            }
+            post_response = self.client.post(
+                '/support/api/posts/create/',
+                json.dumps(post_data),
+                content_type='application/json'
+            )
+            self.assertEqual(post_response.status_code, 201)
+            post_result = post_response.json()
+            self.assertTrue(post_result['is_private'])
 
-        # 4. 작성자가 비밀글 조회 가능
-        detail_response = self.client.get(f'/support/api/posts/{post_id}/')
-        self.assertEqual(detail_response.status_code, 200)
-        detail_result = detail_response.json()
-        self.assertEqual(detail_result['title'], '비밀글 테스트')
+            post_id = post_result['id']
+
+            detail_response = self.client.get(f'/support/api/posts/{post_id}/')
+            self.assertEqual(detail_response.status_code, 200)
+            detail_result = detail_response.json()
+            self.assertEqual(detail_result['title'], '비밀글 테스트')
+
+            TestResults.add("test_full_flow_user_sync_to_private_post", "PASS")
+        except AssertionError:
+            TestResults.add("test_full_flow_user_sync_to_private_post", "FAIL")
+            raise
 
     def test_other_user_cannot_access_private_post(self):
         """다른 유저는 비밀글 접근 불가."""
-        # 1. 첫 번째 유저로 비밀글 생성
         user1_data = {
             'user_id': str(uuid.uuid4()),
             'username': '유저1',
@@ -181,7 +208,6 @@ class IntegrationFlowTest(TestCase):
         )
         post_id = post_response.json()['id']
 
-        # 2. 다른 유저로 세션 변경
         new_client = Client()
         user2_data = {
             'user_id': str(uuid.uuid4()),
@@ -194,13 +220,16 @@ class IntegrationFlowTest(TestCase):
             content_type='application/json'
         )
 
-        # 3. 다른 유저가 비밀글 접근 시도
-        detail_response = new_client.get(f'/support/api/posts/{post_id}/')
-        self.assertEqual(detail_response.status_code, 403)
+        try:
+            detail_response = new_client.get(f'/support/api/posts/{post_id}/')
+            self.assertEqual(detail_response.status_code, 403)
+            TestResults.add("test_other_user_cannot_access_private_post", "PASS")
+        except AssertionError:
+            TestResults.add("test_other_user_cannot_access_private_post", "FAIL")
+            raise
 
     def test_admin_can_access_any_private_post(self):
         """관리자는 모든 비밀글 접근 가능."""
-        # 1. 일반 유저로 비밀글 생성
         user_data = {
             'user_id': str(uuid.uuid4()),
             'username': '일반유저',
@@ -225,7 +254,6 @@ class IntegrationFlowTest(TestCase):
         )
         post_id = post_response.json()['id']
 
-        # 2. 관리자로 세션 변경
         admin_client = Client()
         admin_data = {
             'user_id': str(uuid.uuid4()),
@@ -238,15 +266,18 @@ class IntegrationFlowTest(TestCase):
             content_type='application/json'
         )
 
-        # 3. 관리자가 비밀글 접근
-        detail_response = admin_client.get(f'/support/api/posts/{post_id}/')
-        self.assertEqual(detail_response.status_code, 200)
-        detail_result = detail_response.json()
-        self.assertEqual(detail_result['title'], '일반유저의 비밀글')
+        try:
+            detail_response = admin_client.get(f'/support/api/posts/{post_id}/')
+            self.assertEqual(detail_response.status_code, 200)
+            detail_result = detail_response.json()
+            self.assertEqual(detail_result['title'], '일반유저의 비밀글')
+            TestResults.add("test_admin_can_access_any_private_post", "PASS")
+        except AssertionError:
+            TestResults.add("test_admin_can_access_any_private_post", "FAIL")
+            raise
 
     def test_admin_can_comment_on_private_post(self):
         """관리자는 타인의 비밀글에 댓글 작성 가능."""
-        # 1. 일반 유저로 비밀글 생성
         user_data = {
             'user_id': str(uuid.uuid4()),
             'username': '일반유저',
@@ -271,7 +302,6 @@ class IntegrationFlowTest(TestCase):
         )
         post_id = post_response.json()['id']
 
-        # 2. 관리자로 세션 변경
         admin_client = Client()
         admin_data = {
             'user_id': str(uuid.uuid4()),
@@ -284,14 +314,25 @@ class IntegrationFlowTest(TestCase):
             content_type='application/json'
         )
 
-        # 3. 관리자가 비밀글에 댓글 작성
         comment_data = {
             'content': '관리자 댓글입니다.',
             'author': '관리자',
         }
-        comment_response = admin_client.post(
-            f'/support/api/posts/{post_id}/comments/',
-            json.dumps(comment_data),
-            content_type='application/json'
-        )
-        self.assertEqual(comment_response.status_code, 201)
+
+        try:
+            comment_response = admin_client.post(
+                f'/support/api/posts/{post_id}/comments/',
+                json.dumps(comment_data),
+                content_type='application/json'
+            )
+            self.assertEqual(comment_response.status_code, 201)
+            TestResults.add("test_admin_can_comment_on_private_post", "PASS")
+        except AssertionError:
+            TestResults.add("test_admin_can_comment_on_private_post", "FAIL")
+            raise
+
+    @classmethod
+    def tearDownClass(cls):
+        """마지막 테스트 클래스 끝나면 요약 출력"""
+        super().tearDownClass()
+        TestResults.print_summary()

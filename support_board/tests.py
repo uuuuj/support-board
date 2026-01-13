@@ -7,8 +7,27 @@ import json
 import uuid
 from django.test import TestCase, Client
 
-
 from .models import User, Post, Comment, Tag
+
+
+class TestResults:
+    """테스트 결과 저장"""
+    items = []
+
+    @classmethod
+    def add(cls, name, status):
+        cls.items.append((name, status))
+
+    @classmethod
+    def print_summary(cls):
+        print("\n" + "=" * 50)
+        print("테스트 결과 요약")
+        print("=" * 50)
+        for name, status in cls.items:
+            icon = "PASS" if status == "PASS" else "FAIL"
+            print(f"[{icon}] {name}")
+        print("=" * 50)
+        cls.items = []
 
 
 class UserSyncAPITest(TestCase):
@@ -32,13 +51,16 @@ class UserSyncAPITest(TestCase):
             content_type='application/json'
         )
 
-        self.assertEqual(response.status_code, 201)
-        result = response.json()
-        self.assertEqual(result['username'], '테스트유저')
-        self.assertFalse(result['is_admin'])
-
-        # DB에 저장 확인
-        self.assertTrue(User.objects.filter(uuid=user_id).exists())
+        try:
+            self.assertEqual(response.status_code, 201)
+            result = response.json()
+            self.assertEqual(result['username'], '테스트유저')
+            self.assertFalse(result['is_admin'])
+            self.assertTrue(User.objects.filter(uuid=user_id).exists())
+            TestResults.add("test_sync_new_user", "PASS")
+        except AssertionError:
+            TestResults.add("test_sync_new_user", "FAIL")
+            raise
 
     def test_sync_existing_user(self):
         """기존 유저 업데이트 테스트."""
@@ -57,10 +79,15 @@ class UserSyncAPITest(TestCase):
             content_type='application/json'
         )
 
-        self.assertEqual(response.status_code, 200)
-        result = response.json()
-        self.assertEqual(result['username'], '업데이트유저')
-        self.assertTrue(result['is_admin'])
+        try:
+            self.assertEqual(response.status_code, 200)
+            result = response.json()
+            self.assertEqual(result['username'], '업데이트유저')
+            self.assertTrue(result['is_admin'])
+            TestResults.add("test_sync_existing_user", "PASS")
+        except AssertionError:
+            TestResults.add("test_sync_existing_user", "FAIL")
+            raise
 
     def test_sync_missing_user_id(self):
         """user_id 누락 시 에러 테스트."""
@@ -74,7 +101,12 @@ class UserSyncAPITest(TestCase):
             content_type='application/json'
         )
 
-        self.assertEqual(response.status_code, 400)
+        try:
+            self.assertEqual(response.status_code, 400)
+            TestResults.add("test_sync_missing_user_id", "PASS")
+        except AssertionError:
+            TestResults.add("test_sync_missing_user_id", "FAIL")
+            raise
 
     def test_sync_missing_username(self):
         """username 누락 시 에러 테스트."""
@@ -88,7 +120,12 @@ class UserSyncAPITest(TestCase):
             content_type='application/json'
         )
 
-        self.assertEqual(response.status_code, 400)
+        try:
+            self.assertEqual(response.status_code, 400)
+            TestResults.add("test_sync_missing_username", "PASS")
+        except AssertionError:
+            TestResults.add("test_sync_missing_username", "FAIL")
+            raise
 
     def test_sync_saves_to_session(self):
         """세션에 유저 정보 저장 확인 테스트."""
@@ -105,12 +142,16 @@ class UserSyncAPITest(TestCase):
             content_type='application/json'
         )
 
-        # /api/users/me/로 세션 확인
         response = self.client.get('/support/api/users/me/')
 
-        self.assertEqual(response.status_code, 200)
-        result = response.json()
-        self.assertEqual(result['username'], '세션테스트')
+        try:
+            self.assertEqual(response.status_code, 200)
+            result = response.json()
+            self.assertEqual(result['username'], '세션테스트')
+            TestResults.add("test_sync_saves_to_session", "PASS")
+        except AssertionError:
+            TestResults.add("test_sync_saves_to_session", "FAIL")
+            raise
 
 
 class PostAPITest(TestCase):
@@ -157,10 +198,15 @@ class PostAPITest(TestCase):
             content_type='application/json'
         )
 
-        self.assertEqual(response.status_code, 201)
-        result = response.json()
-        self.assertEqual(result['title'], '테스트 제목')
-        self.assertFalse(result['is_private'])
+        try:
+            self.assertEqual(response.status_code, 201)
+            result = response.json()
+            self.assertEqual(result['title'], '테스트 제목')
+            self.assertFalse(result['is_private'])
+            TestResults.add("test_create_post", "PASS")
+        except AssertionError:
+            TestResults.add("test_create_post", "FAIL")
+            raise
 
     def test_create_private_post_without_login(self):
         """미로그인 상태에서 비밀글 생성 시 에러 테스트."""
@@ -177,7 +223,12 @@ class PostAPITest(TestCase):
             content_type='application/json'
         )
 
-        self.assertEqual(response.status_code, 401)
+        try:
+            self.assertEqual(response.status_code, 401)
+            TestResults.add("test_create_private_post_without_login", "PASS")
+        except AssertionError:
+            TestResults.add("test_create_private_post_without_login", "FAIL")
+            raise
 
     def test_create_private_post_with_login(self):
         """로그인 상태에서 비밀글 생성 테스트."""
@@ -196,9 +247,14 @@ class PostAPITest(TestCase):
             content_type='application/json'
         )
 
-        self.assertEqual(response.status_code, 201)
-        result = response.json()
-        self.assertTrue(result['is_private'])
+        try:
+            self.assertEqual(response.status_code, 201)
+            result = response.json()
+            self.assertTrue(result['is_private'])
+            TestResults.add("test_create_private_post_with_login", "PASS")
+        except AssertionError:
+            TestResults.add("test_create_private_post_with_login", "FAIL")
+            raise
 
     def test_list_posts(self):
         """게시글 목록 조회 테스트."""
@@ -207,9 +263,14 @@ class PostAPITest(TestCase):
 
         response = self.client.get('/support/api/posts/')
 
-        self.assertEqual(response.status_code, 200)
-        result = response.json()
-        self.assertEqual(result['count'], 2)
+        try:
+            self.assertEqual(response.status_code, 200)
+            result = response.json()
+            self.assertEqual(result['count'], 2)
+            TestResults.add("test_list_posts", "PASS")
+        except AssertionError:
+            TestResults.add("test_list_posts", "FAIL")
+            raise
 
     def test_search_posts(self):
         """게시글 검색 테스트."""
@@ -218,10 +279,15 @@ class PostAPITest(TestCase):
 
         response = self.client.get('/support/api/posts/', {'q': 'Django'})
 
-        self.assertEqual(response.status_code, 200)
-        result = response.json()
-        self.assertEqual(result['count'], 1)
-        self.assertEqual(result['posts'][0]['title'], 'Django 튜토리얼')
+        try:
+            self.assertEqual(response.status_code, 200)
+            result = response.json()
+            self.assertEqual(result['count'], 1)
+            self.assertEqual(result['posts'][0]['title'], 'Django 튜토리얼')
+            TestResults.add("test_search_posts", "PASS")
+        except AssertionError:
+            TestResults.add("test_search_posts", "FAIL")
+            raise
 
 
 class PrivatePostAccessTest(TestCase):
@@ -268,9 +334,14 @@ class PrivatePostAccessTest(TestCase):
 
         response = self.client.get(f'/support/api/posts/{self.private_post.id}/')
 
-        self.assertEqual(response.status_code, 200)
-        result = response.json()
-        self.assertEqual(result['title'], '비밀글')
+        try:
+            self.assertEqual(response.status_code, 200)
+            result = response.json()
+            self.assertEqual(result['title'], '비밀글')
+            TestResults.add("test_author_can_access_private_post", "PASS")
+        except AssertionError:
+            TestResults.add("test_author_can_access_private_post", "FAIL")
+            raise
 
     def test_admin_can_access_private_post(self):
         """관리자는 비밀글 접근 가능."""
@@ -278,9 +349,14 @@ class PrivatePostAccessTest(TestCase):
 
         response = self.client.get(f'/support/api/posts/{self.private_post.id}/')
 
-        self.assertEqual(response.status_code, 200)
-        result = response.json()
-        self.assertEqual(result['title'], '비밀글')
+        try:
+            self.assertEqual(response.status_code, 200)
+            result = response.json()
+            self.assertEqual(result['title'], '비밀글')
+            TestResults.add("test_admin_can_access_private_post", "PASS")
+        except AssertionError:
+            TestResults.add("test_admin_can_access_private_post", "FAIL")
+            raise
 
     def test_other_user_cannot_access_private_post(self):
         """타인은 비밀글 접근 불가."""
@@ -288,23 +364,38 @@ class PrivatePostAccessTest(TestCase):
 
         response = self.client.get(f'/support/api/posts/{self.private_post.id}/')
 
-        self.assertEqual(response.status_code, 403)
+        try:
+            self.assertEqual(response.status_code, 403)
+            TestResults.add("test_other_user_cannot_access_private_post", "PASS")
+        except AssertionError:
+            TestResults.add("test_other_user_cannot_access_private_post", "FAIL")
+            raise
 
     def test_anonymous_cannot_access_private_post(self):
         """비로그인 유저는 비밀글 접근 불가."""
         response = self.client.get(f'/support/api/posts/{self.private_post.id}/')
 
-        self.assertEqual(response.status_code, 403)
+        try:
+            self.assertEqual(response.status_code, 403)
+            TestResults.add("test_anonymous_cannot_access_private_post", "PASS")
+        except AssertionError:
+            TestResults.add("test_anonymous_cannot_access_private_post", "FAIL")
+            raise
 
     def test_private_post_hidden_in_list(self):
         """비밀글은 목록에서 제목/내용 숨김."""
         response = self.client.get('/support/api/posts/')
 
-        self.assertEqual(response.status_code, 200)
-        result = response.json()
-        post_data = result['posts'][0]
-        self.assertEqual(post_data['title'], '비밀글입니다.')
-        self.assertEqual(post_data['content'], '')
+        try:
+            self.assertEqual(response.status_code, 200)
+            result = response.json()
+            post_data = result['posts'][0]
+            self.assertEqual(post_data['title'], '비밀글입니다.')
+            self.assertEqual(post_data['content'], '')
+            TestResults.add("test_private_post_hidden_in_list", "PASS")
+        except AssertionError:
+            TestResults.add("test_private_post_hidden_in_list", "FAIL")
+            raise
 
 
 class CommentAPITest(TestCase):
@@ -363,9 +454,14 @@ class CommentAPITest(TestCase):
             content_type='application/json'
         )
 
-        self.assertEqual(response.status_code, 201)
-        result = response.json()
-        self.assertEqual(result['content'], '댓글 내용')
+        try:
+            self.assertEqual(response.status_code, 201)
+            result = response.json()
+            self.assertEqual(result['content'], '댓글 내용')
+            TestResults.add("test_create_comment_on_public_post", "PASS")
+        except AssertionError:
+            TestResults.add("test_create_comment_on_public_post", "FAIL")
+            raise
 
     def test_author_can_comment_on_private_post(self):
         """비밀글 작성자는 댓글 작성 가능."""
@@ -382,7 +478,12 @@ class CommentAPITest(TestCase):
             content_type='application/json'
         )
 
-        self.assertEqual(response.status_code, 201)
+        try:
+            self.assertEqual(response.status_code, 201)
+            TestResults.add("test_author_can_comment_on_private_post", "PASS")
+        except AssertionError:
+            TestResults.add("test_author_can_comment_on_private_post", "FAIL")
+            raise
 
     def test_admin_can_comment_on_private_post(self):
         """관리자는 비밀글에 댓글 작성 가능."""
@@ -399,7 +500,12 @@ class CommentAPITest(TestCase):
             content_type='application/json'
         )
 
-        self.assertEqual(response.status_code, 201)
+        try:
+            self.assertEqual(response.status_code, 201)
+            TestResults.add("test_admin_can_comment_on_private_post", "PASS")
+        except AssertionError:
+            TestResults.add("test_admin_can_comment_on_private_post", "FAIL")
+            raise
 
     def test_other_user_cannot_comment_on_private_post(self):
         """타인은 비밀글에 댓글 작성 불가."""
@@ -416,7 +522,12 @@ class CommentAPITest(TestCase):
             content_type='application/json'
         )
 
-        self.assertEqual(response.status_code, 403)
+        try:
+            self.assertEqual(response.status_code, 403)
+            TestResults.add("test_other_user_cannot_comment_on_private_post", "PASS")
+        except AssertionError:
+            TestResults.add("test_other_user_cannot_comment_on_private_post", "FAIL")
+            raise
 
     def test_anonymous_cannot_comment_on_private_post(self):
         """비로그인 유저는 비밀글에 댓글 작성 불가."""
@@ -431,7 +542,12 @@ class CommentAPITest(TestCase):
             content_type='application/json'
         )
 
-        self.assertEqual(response.status_code, 403)
+        try:
+            self.assertEqual(response.status_code, 403)
+            TestResults.add("test_anonymous_cannot_comment_on_private_post", "PASS")
+        except AssertionError:
+            TestResults.add("test_anonymous_cannot_comment_on_private_post", "FAIL")
+            raise
 
 
 class ValidationTest(TestCase):
@@ -444,8 +560,13 @@ class ValidationTest(TestCase):
         malicious_input = '<script>alert("xss")</script>'
         sanitized = ValidationService.sanitize_string(malicious_input, 200, 'test')
 
-        self.assertNotIn('<script>', sanitized)
-        self.assertIn('&lt;script&gt;', sanitized)
+        try:
+            self.assertNotIn('<script>', sanitized)
+            self.assertIn('&lt;script&gt;', sanitized)
+            TestResults.add("test_xss_prevention", "PASS")
+        except AssertionError:
+            TestResults.add("test_xss_prevention", "FAIL")
+            raise
 
     def test_title_length_limit(self):
         """제목 길이 제한 테스트."""
@@ -453,8 +574,13 @@ class ValidationTest(TestCase):
 
         long_title = 'a' * 201
 
-        with self.assertRaises(ValidationError):
-            ValidationService.sanitize_string(long_title, 200, '제목')
+        try:
+            with self.assertRaises(ValidationError):
+                ValidationService.sanitize_string(long_title, 200, '제목')
+            TestResults.add("test_title_length_limit", "PASS")
+        except AssertionError:
+            TestResults.add("test_title_length_limit", "FAIL")
+            raise
 
     def test_tags_count_limit(self):
         """태그 개수 제한 테스트."""
@@ -462,5 +588,16 @@ class ValidationTest(TestCase):
 
         too_many_tags = ['tag' + str(i) for i in range(11)]
 
-        with self.assertRaises(ValidationError):
-            ValidationService.sanitize_tags(too_many_tags)
+        try:
+            with self.assertRaises(ValidationError):
+                ValidationService.sanitize_tags(too_many_tags)
+            TestResults.add("test_tags_count_limit", "PASS")
+        except AssertionError:
+            TestResults.add("test_tags_count_limit", "FAIL")
+            raise
+
+    @classmethod
+    def tearDownClass(cls):
+        """마지막 테스트 클래스 끝나면 요약 출력"""
+        super().tearDownClass()
+        TestResults.print_summary()
