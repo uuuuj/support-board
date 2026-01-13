@@ -35,6 +35,7 @@ ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(','
 # Application definition
 
 INSTALLED_APPS = [
+    'django.contrib.auth',  # DRF 의존성 (실제 사용 안함)
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
