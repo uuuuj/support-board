@@ -91,7 +91,7 @@ DATABASES = {
             'extra_params': 'TrustServerCertificate=yes',
         },
         'TEST': {
-            'NAME': os.environ.get('TEST_DB_NAME', 'support_board_test'),
+            'NAME': os.environ.get('TEST_DB_NAME', 'test_support_board'),
         },
     }
 }
