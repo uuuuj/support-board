@@ -92,6 +92,8 @@ DATABASES = {
         },
         'TEST': {
             'NAME': os.environ.get('TEST_DB_NAME', 'test_support_board'),
+            'USER': os.environ.get('TEST_DB_USER'),
+            'PASSWORD': os.environ.get('TEST_DB_PASSWORD'),
         },
     }
 }
