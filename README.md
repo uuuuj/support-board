@@ -202,6 +202,12 @@ detect-secrets scan --all-files
 python scripts/security_check.py
 ```
 
+HTML 보안 리포트 생성:
+```bash
+python scripts/security_report.py
+# security_reports/index.html 에서 결과 확인
+```
+
 ## WebSocket 유저 동기화
 
 이 애플리케이션은 클라이언트 PC에서 실행되는 WebSocket 서버에서 유저 정보를 가져오는 방식으로 인증합니다.

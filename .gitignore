@@ -324,3 +324,6 @@ thumb
 sketch
 
 # End of https://www.toptal.com/developers/gitignore/api/python,react,node
+
+# Security reports
+security_reports/
