@@ -6,3 +6,4 @@ python-dotenv>=1.0.0
 whitenoise>=6.0.0
 mssql-django>=1.5
 pyodbc>=5.0.0
+websockets>=14.0

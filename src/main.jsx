@@ -725,6 +725,7 @@ const BoardList = () => {
 };
 
 export default BoardList;
+export { PostCreate, PostDetail };
 
 // 화면에 렌더링
 ReactDOM.createRoot(document.getElementById('root')).render(
