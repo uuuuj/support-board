@@ -1,0 +1,17 @@
+# 개발/보안 테스트 의존성
+-r requirements.txt
+
+# 보안 취약점 스캔
+bandit>=1.7.0
+
+# 의존성 취약점 검사
+pip-audit>=2.6.0
+safety>=2.3.0
+
+# 코드 품질
+flake8>=6.0.0
+pylint>=3.0.0
+pylint-django>=2.5.0
+
+# 민감정보 탐지
+detect-secrets>=1.4.0

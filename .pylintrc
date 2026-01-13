@@ -1,0 +1,18 @@
+[MASTER]
+load-plugins=pylint_django
+django-settings-module=config.settings
+ignore=migrations,venv,.venv,node_modules,staticfiles
+
+[MESSAGES CONTROL]
+disable=
+    C0114,  # missing-module-docstring
+    C0115,  # missing-class-docstring
+    C0116,  # missing-function-docstring
+    R0903,  # too-few-public-methods
+    W0613,  # unused-argument
+
+[FORMAT]
+max-line-length=120
+
+[DESIGN]
+max-args=10

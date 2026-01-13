@@ -172,6 +172,36 @@ docker-compose exec web python manage.py test support_board --keepdb
 npm test
 ```
 
+### 보안 테스트
+
+보안 도구 설치:
+```bash
+pip install -r requirements-dev.txt
+```
+
+개별 도구 실행:
+```bash
+# Bandit - 보안 취약점 스캔
+bandit -r support_board config -c .bandit
+
+# pip-audit - 의존성 취약점 검사
+pip-audit
+
+# Safety - 의존성 취약점 검사
+safety check
+
+# Flake8 - 코드 품질
+flake8 support_board config
+
+# detect-secrets - 민감정보 탐지
+detect-secrets scan --all-files
+```
+
+전체 보안 검사 스크립트:
+```bash
+python scripts/security_check.py
+```
+
 ## WebSocket 유저 동기화
 
 이 애플리케이션은 클라이언트 PC에서 실행되는 WebSocket 서버에서 유저 정보를 가져오는 방식으로 인증합니다.
