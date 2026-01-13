@@ -7,7 +7,7 @@ import json
 import uuid
 from django.test import TestCase, Client
 
-from .models import User, Post, Comment, Tag
+from support_board.models import User, Post, Comment, Tag
 
 
 class TestResults:
@@ -21,7 +21,7 @@ class TestResults:
     @classmethod
     def print_summary(cls):
         print("\n" + "=" * 50)
-        print("테스트 결과 요약")
+        print("API 테스트 결과 요약")
         print("=" * 50)
         for name, status in cls.items:
             icon = "PASS" if status == "PASS" else "FAIL"
@@ -549,13 +549,19 @@ class CommentAPITest(TestCase):
             TestResults.add("test_anonymous_cannot_comment_on_private_post", "FAIL")
             raise
 
+    @classmethod
+    def tearDownClass(cls):
+        """마지막 테스트 클래스 끝나면 요약 출력"""
+        super().tearDownClass()
+        TestResults.print_summary()
+
 
 class ValidationTest(TestCase):
     """입력값 검증 테스트."""
 
     def test_xss_prevention(self):
         """XSS 방지 테스트."""
-        from .validators import ValidationService
+        from support_board.validators import ValidationService
 
         malicious_input = '<script>alert("xss")</script>'
         sanitized = ValidationService.sanitize_string(malicious_input, 200, 'test')
@@ -570,7 +576,7 @@ class ValidationTest(TestCase):
 
     def test_title_length_limit(self):
         """제목 길이 제한 테스트."""
-        from .validators import ValidationService, ValidationError
+        from support_board.validators import ValidationService, ValidationError
 
         long_title = 'a' * 201
 
@@ -584,7 +590,7 @@ class ValidationTest(TestCase):
 
     def test_tags_count_limit(self):
         """태그 개수 제한 테스트."""
-        from .validators import ValidationService, ValidationError
+        from support_board.validators import ValidationService, ValidationError
 
         too_many_tags = ['tag' + str(i) for i in range(11)]
 
@@ -595,9 +601,3 @@ class ValidationTest(TestCase):
         except AssertionError:
             TestResults.add("test_tags_count_limit", "FAIL")
             raise
-
-    @classmethod
-    def tearDownClass(cls):
-        """마지막 테스트 클래스 끝나면 요약 출력"""
-        super().tearDownClass()
-        TestResults.print_summary()
