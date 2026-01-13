@@ -1,18 +1,21 @@
 """Support Board API 테스트.
 
-Django REST Framework APITestCase를 사용한 API 테스트입니다.
+Django TestCase를 사용한 API 테스트입니다.
 """
 
+import json
 import uuid
-from django.test import TestCase
-from rest_framework.test import APITestCase
-from rest_framework import status
+from django.test import TestCase, Client
+
 
 from .models import User, Post, Comment, Tag
 
 
-class UserSyncAPITest(APITestCase):
+class UserSyncAPITest(TestCase):
     """유저 동기화 API 테스트."""
+
+    def setUp(self):
+        self.client = Client()
 
     def test_sync_new_user(self):
         """새 유저 생성 테스트."""
@@ -23,11 +26,16 @@ class UserSyncAPITest(APITestCase):
             'is_admin': False,
         }
 
-        response = self.client.post('/support/api/users/sync/', data, format='json')
+        response = self.client.post(
+            '/support/api/users/sync/',
+            json.dumps(data),
+            content_type='application/json'
+        )
 
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data['username'], '테스트유저')
-        self.assertFalse(response.data['is_admin'])
+        self.assertEqual(response.status_code, 201)
+        result = response.json()
+        self.assertEqual(result['username'], '테스트유저')
+        self.assertFalse(result['is_admin'])
 
         # DB에 저장 확인
         self.assertTrue(User.objects.filter(uuid=user_id).exists())
@@ -43,11 +51,16 @@ class UserSyncAPITest(APITestCase):
             'is_admin': True,
         }
 
-        response = self.client.post('/support/api/users/sync/', data, format='json')
+        response = self.client.post(
+            '/support/api/users/sync/',
+            json.dumps(data),
+            content_type='application/json'
+        )
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['username'], '업데이트유저')
-        self.assertTrue(response.data['is_admin'])
+        self.assertEqual(response.status_code, 200)
+        result = response.json()
+        self.assertEqual(result['username'], '업데이트유저')
+        self.assertTrue(result['is_admin'])
 
     def test_sync_missing_user_id(self):
         """user_id 누락 시 에러 테스트."""
@@ -55,9 +68,13 @@ class UserSyncAPITest(APITestCase):
             'username': '테스트유저',
         }
 
-        response = self.client.post('/support/api/users/sync/', data, format='json')
+        response = self.client.post(
+            '/support/api/users/sync/',
+            json.dumps(data),
+            content_type='application/json'
+        )
 
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, 400)
 
     def test_sync_missing_username(self):
         """username 누락 시 에러 테스트."""
@@ -65,9 +82,13 @@ class UserSyncAPITest(APITestCase):
             'user_id': str(uuid.uuid4()),
         }
 
-        response = self.client.post('/support/api/users/sync/', data, format='json')
+        response = self.client.post(
+            '/support/api/users/sync/',
+            json.dumps(data),
+            content_type='application/json'
+        )
 
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, 400)
 
     def test_sync_saves_to_session(self):
         """세션에 유저 정보 저장 확인 테스트."""
@@ -78,20 +99,26 @@ class UserSyncAPITest(APITestCase):
             'is_admin': False,
         }
 
-        self.client.post('/support/api/users/sync/', data, format='json')
+        self.client.post(
+            '/support/api/users/sync/',
+            json.dumps(data),
+            content_type='application/json'
+        )
 
         # /api/users/me/로 세션 확인
         response = self.client.get('/support/api/users/me/')
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['username'], '세션테스트')
+        self.assertEqual(response.status_code, 200)
+        result = response.json()
+        self.assertEqual(result['username'], '세션테스트')
 
 
-class PostAPITest(APITestCase):
+class PostAPITest(TestCase):
     """게시글 API 테스트."""
 
     def setUp(self):
         """테스트 데이터 설정."""
+        self.client = Client()
         self.user = User.objects.create(
             uuid=uuid.uuid4(),
             username='testuser',
@@ -124,11 +151,16 @@ class PostAPITest(APITestCase):
             'author': '작성자',
         }
 
-        response = self.client.post('/support/api/posts/create/', data, format='json')
+        response = self.client.post(
+            '/support/api/posts/create/',
+            json.dumps(data),
+            content_type='application/json'
+        )
 
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data['title'], '테스트 제목')
-        self.assertFalse(response.data['is_private'])
+        self.assertEqual(response.status_code, 201)
+        result = response.json()
+        self.assertEqual(result['title'], '테스트 제목')
+        self.assertFalse(result['is_private'])
 
     def test_create_private_post_without_login(self):
         """미로그인 상태에서 비밀글 생성 시 에러 테스트."""
@@ -139,9 +171,13 @@ class PostAPITest(APITestCase):
             'is_private': True,
         }
 
-        response = self.client.post('/support/api/posts/create/', data, format='json')
+        response = self.client.post(
+            '/support/api/posts/create/',
+            json.dumps(data),
+            content_type='application/json'
+        )
 
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(response.status_code, 401)
 
     def test_create_private_post_with_login(self):
         """로그인 상태에서 비밀글 생성 테스트."""
@@ -154,10 +190,15 @@ class PostAPITest(APITestCase):
             'is_private': True,
         }
 
-        response = self.client.post('/support/api/posts/create/', data, format='json')
+        response = self.client.post(
+            '/support/api/posts/create/',
+            json.dumps(data),
+            content_type='application/json'
+        )
 
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertTrue(response.data['is_private'])
+        self.assertEqual(response.status_code, 201)
+        result = response.json()
+        self.assertTrue(result['is_private'])
 
     def test_list_posts(self):
         """게시글 목록 조회 테스트."""
@@ -166,8 +207,9 @@ class PostAPITest(APITestCase):
 
         response = self.client.get('/support/api/posts/')
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['count'], 2)
+        self.assertEqual(response.status_code, 200)
+        result = response.json()
+        self.assertEqual(result['count'], 2)
 
     def test_search_posts(self):
         """게시글 검색 테스트."""
@@ -176,16 +218,18 @@ class PostAPITest(APITestCase):
 
         response = self.client.get('/support/api/posts/', {'q': 'Django'})
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['count'], 1)
-        self.assertEqual(response.data['posts'][0]['title'], 'Django 튜토리얼')
+        self.assertEqual(response.status_code, 200)
+        result = response.json()
+        self.assertEqual(result['count'], 1)
+        self.assertEqual(result['posts'][0]['title'], 'Django 튜토리얼')
 
 
-class PrivatePostAccessTest(APITestCase):
+class PrivatePostAccessTest(TestCase):
     """비밀글 접근 권한 테스트."""
 
     def setUp(self):
         """테스트 데이터 설정."""
+        self.client = Client()
         self.author = User.objects.create(
             uuid=uuid.uuid4(),
             username='author',
@@ -224,8 +268,9 @@ class PrivatePostAccessTest(APITestCase):
 
         response = self.client.get(f'/support/api/posts/{self.private_post.id}/')
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['title'], '비밀글')
+        self.assertEqual(response.status_code, 200)
+        result = response.json()
+        self.assertEqual(result['title'], '비밀글')
 
     def test_admin_can_access_private_post(self):
         """관리자는 비밀글 접근 가능."""
@@ -233,8 +278,9 @@ class PrivatePostAccessTest(APITestCase):
 
         response = self.client.get(f'/support/api/posts/{self.private_post.id}/')
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['title'], '비밀글')
+        self.assertEqual(response.status_code, 200)
+        result = response.json()
+        self.assertEqual(result['title'], '비밀글')
 
     def test_other_user_cannot_access_private_post(self):
         """타인은 비밀글 접근 불가."""
@@ -242,29 +288,31 @@ class PrivatePostAccessTest(APITestCase):
 
         response = self.client.get(f'/support/api/posts/{self.private_post.id}/')
 
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, 403)
 
     def test_anonymous_cannot_access_private_post(self):
         """비로그인 유저는 비밀글 접근 불가."""
         response = self.client.get(f'/support/api/posts/{self.private_post.id}/')
 
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, 403)
 
     def test_private_post_hidden_in_list(self):
         """비밀글은 목록에서 제목/내용 숨김."""
         response = self.client.get('/support/api/posts/')
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        post_data = response.data['posts'][0]
+        self.assertEqual(response.status_code, 200)
+        result = response.json()
+        post_data = result['posts'][0]
         self.assertEqual(post_data['title'], '비밀글입니다.')
         self.assertEqual(post_data['content'], '')
 
 
-class CommentAPITest(APITestCase):
+class CommentAPITest(TestCase):
     """댓글 API 테스트."""
 
     def setUp(self):
         """테스트 데이터 설정."""
+        self.client = Client()
         self.user = User.objects.create(
             uuid=uuid.uuid4(),
             username='testuser',
@@ -311,12 +359,13 @@ class CommentAPITest(APITestCase):
 
         response = self.client.post(
             f'/support/api/posts/{self.public_post.id}/comments/',
-            data,
-            format='json'
+            json.dumps(data),
+            content_type='application/json'
         )
 
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data['content'], '댓글 내용')
+        self.assertEqual(response.status_code, 201)
+        result = response.json()
+        self.assertEqual(result['content'], '댓글 내용')
 
     def test_author_can_comment_on_private_post(self):
         """비밀글 작성자는 댓글 작성 가능."""
@@ -329,11 +378,11 @@ class CommentAPITest(APITestCase):
 
         response = self.client.post(
             f'/support/api/posts/{self.private_post.id}/comments/',
-            data,
-            format='json'
+            json.dumps(data),
+            content_type='application/json'
         )
 
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.status_code, 201)
 
     def test_admin_can_comment_on_private_post(self):
         """관리자는 비밀글에 댓글 작성 가능."""
@@ -346,11 +395,11 @@ class CommentAPITest(APITestCase):
 
         response = self.client.post(
             f'/support/api/posts/{self.private_post.id}/comments/',
-            data,
-            format='json'
+            json.dumps(data),
+            content_type='application/json'
         )
 
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.status_code, 201)
 
     def test_other_user_cannot_comment_on_private_post(self):
         """타인은 비밀글에 댓글 작성 불가."""
@@ -363,11 +412,11 @@ class CommentAPITest(APITestCase):
 
         response = self.client.post(
             f'/support/api/posts/{self.private_post.id}/comments/',
-            data,
-            format='json'
+            json.dumps(data),
+            content_type='application/json'
         )
 
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, 403)
 
     def test_anonymous_cannot_comment_on_private_post(self):
         """비로그인 유저는 비밀글에 댓글 작성 불가."""
@@ -378,11 +427,11 @@ class CommentAPITest(APITestCase):
 
         response = self.client.post(
             f'/support/api/posts/{self.private_post.id}/comments/',
-            data,
-            format='json'
+            json.dumps(data),
+            content_type='application/json'
         )
 
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, 403)
 
 
 class ValidationTest(TestCase):
