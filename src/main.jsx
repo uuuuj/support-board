@@ -1,15 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
-// 아이콘 라이브러리가 설치되어 있어야 합니다. (터미널에: npm install lucide-react)
-import { MessageSquare, ChevronLeft, ChevronRight, ArrowLeft, MoreHorizontal, Plus, X, Search, Filter, ChevronDown } from 'lucide-react';
+import { MessageSquare, ChevronLeft, ChevronRight, ArrowLeft, MoreHorizontal, Plus, X, Search, Filter, ChevronDown, Lock } from 'lucide-react';
+import { startUserSyncPolling, getCurrentUser } from './userSync';
+
+// API 기본 URL
+const API_BASE = '/support/api';
 
 // 게시글 작성 컴포넌트
-const PostCreate = ({ onBack, onSubmit }) => {
+const PostCreate = ({ onBack, onSubmit, currentUser }) => {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
-  const [author, setAuthor] = useState('');
+  const [author, setAuthor] = useState(currentUser?.username || '');
   const [resolved, setResolved] = useState(false);
+  const [isPrivate, setIsPrivate] = useState(false);
   const [tags, setTags] = useState('');
 
   const handleSubmit = (e) => {
@@ -18,7 +22,18 @@ const PostCreate = ({ onBack, onSubmit }) => {
       alert('작성자, 제목, 내용을 모두 입력해주세요.');
       return;
     }
-    onSubmit({ title, content, author });
+    if (isPrivate && !currentUser) {
+      alert('비밀글 작성은 로그인이 필요합니다.');
+      return;
+    }
+    onSubmit({
+      title,
+      content,
+      author,
+      is_private: isPrivate,
+      is_resolved: resolved,
+      tags: tags.split(',').map(t => t.trim()).filter(t => t),
+    });
   };
 
   return (
@@ -120,6 +135,25 @@ const PostCreate = ({ onBack, onSubmit }) => {
               className={`w-12 h-7 rounded-full transition-colors ${resolved ? 'bg-emerald-500' : 'bg-gray-200'}`}
             >
               <div className={`w-5 h-5 bg-white rounded-full shadow-sm transition-transform ${resolved ? 'translate-x-6' : 'translate-x-1'}`} />
+            </button>
+          </div>
+
+          {/* Private Toggle */}
+          <div className="flex items-center justify-between py-2">
+            <div className="flex items-center gap-2">
+              <Lock size={16} className="text-gray-500" />
+              <span className="text-sm font-semibold text-gray-900">비밀글</span>
+              {!currentUser && (
+                <span className="text-xs text-gray-400">(로그인 필요)</span>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={() => currentUser && setIsPrivate(!isPrivate)}
+              disabled={!currentUser}
+              className={`w-12 h-7 rounded-full transition-colors ${isPrivate ? 'bg-emerald-500' : 'bg-gray-200'} ${!currentUser ? 'opacity-50 cursor-not-allowed' : ''}`}
+            >
+              <div className={`w-5 h-5 bg-white rounded-full shadow-sm transition-transform ${isPrivate ? 'translate-x-6' : 'translate-x-1'}`} />
             </button>
           </div>
 
@@ -332,9 +366,6 @@ const PostDetail = ({ post, onBack }) => {
   );
 };
 
-// API 기본 URL
-const API_BASE = '/support/api';
-
 // 날짜 포맷 함수
 const formatDate = (dateString) => {
   const date = new Date(dateString);
@@ -356,6 +387,9 @@ const BoardList = () => {
   const [isCreating, setIsCreating] = useState(false);
   const [loading, setLoading] = useState(true);
   const itemsPerPage = 9;
+
+  // 유저 상태
+  const [currentUser, setCurrentUser] = useState(null);
 
   // 검색 상태
   const [searchQuery, setSearchQuery] = useState('');
@@ -402,9 +436,21 @@ const BoardList = () => {
     }
   };
 
-  // 컴포넌트 마운트 시 게시글 가져오기
+  // 컴포넌트 마운트 시 게시글 가져오기 및 유저 동기화 시작
   useEffect(() => {
     fetchPosts();
+
+    // 기존 세션에서 유저 정보 확인
+    getCurrentUser().then(user => {
+      if (user) setCurrentUser(user);
+    });
+
+    // WebSocket 유저 동기화 폴링 시작 (10분마다)
+    const stopPolling = startUserSyncPolling((user) => {
+      setCurrentUser(user);
+    });
+
+    return () => stopPolling();
   }, []);
 
   // 검색 실행 (디바운스 적용)
@@ -426,7 +472,7 @@ const BoardList = () => {
   // 새 게시글 작성 핸들러
   const handleCreatePost = async (newPost) => {
     try {
-      const response = await fetch(`${API_BASE}/posts/`, {
+      const response = await fetch(`${API_BASE}/posts/create/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -437,6 +483,7 @@ const BoardList = () => {
           author: newPost.author || 'Anonymous',
           tags: newPost.tags || [],
           is_resolved: newPost.is_resolved || false,
+          is_private: newPost.is_private || false,
         }),
       });
 
@@ -478,7 +525,7 @@ const BoardList = () => {
 
   // 작성 페이지 렌더링
   if (isCreating) {
-    return <PostCreate onBack={() => setIsCreating(false)} onSubmit={handleCreatePost} />;
+    return <PostCreate onBack={() => setIsCreating(false)} onSubmit={handleCreatePost} currentUser={currentUser} />;
   }
 
   // 상세페이지가 선택되면 PostDetail 렌더링
@@ -616,7 +663,8 @@ const BoardList = () => {
                 )}
 
                 {/* Content */}
-                <h3 className="text-lg font-bold text-gray-900 mb-3 leading-snug truncate">
+                <h3 className="text-lg font-bold text-gray-900 mb-3 leading-snug truncate flex items-center gap-2">
+                  {post.is_private && <Lock size={16} className="text-gray-400 flex-shrink-0" />}
                   {post.title}
                 </h3>
                 <p className="text-gray-600 text-sm leading-relaxed mb-6 line-clamp-3 flex-grow">

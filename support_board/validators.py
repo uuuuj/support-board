@@ -20,6 +20,12 @@ MAX_TAG_LENGTH = 50
 MAX_TAGS_COUNT = 10
 MAX_JSON_SIZE = 50 * 1024  # 50KB
 
+# User 관련 상수
+MAX_USERNAME_LENGTH = 50
+MIN_USERNAME_LENGTH = 3
+MAX_PASSWORD_LENGTH = 128
+MIN_PASSWORD_LENGTH = 4
+
 
 class ValidationError(Exception):
     """입력값 검증 오류.
@@ -215,6 +221,9 @@ class ValidationService:
         if "is_resolved" in data:
             validated["is_resolved"] = cls.validate_boolean(data.get("is_resolved"))
 
+        if "is_private" in data:
+            validated["is_private"] = cls.validate_boolean(data.get("is_private"))
+
         return validated
 
     @classmethod
@@ -258,3 +267,129 @@ class ValidationService:
             raise ValidationError(
                 f"요청 데이터가 너무 큽니다. (최대 {MAX_JSON_SIZE // 1024}KB)"
             )
+
+    @classmethod
+    def validate_register_data(cls, data: dict) -> dict:
+        """회원가입 데이터를 검증합니다.
+
+        Args:
+            data: 검증할 회원가입 데이터.
+
+        Returns:
+            검증된 데이터.
+
+        Raises:
+            ValidationError: 데이터가 유효하지 않은 경우.
+        """
+        username = data.get("username", "")
+        password = data.get("password", "")
+
+        # username 검증
+        if not username or not isinstance(username, str):
+            raise ValidationError("사용자명은 필수 입력 항목입니다.", "username")
+
+        username = username.strip()
+
+        if len(username) < MIN_USERNAME_LENGTH:
+            raise ValidationError(
+                f"사용자명은 {MIN_USERNAME_LENGTH}자 이상이어야 합니다.",
+                "username"
+            )
+
+        if len(username) > MAX_USERNAME_LENGTH:
+            raise ValidationError(
+                f"사용자명은 {MAX_USERNAME_LENGTH}자를 초과할 수 없습니다.",
+                "username"
+            )
+
+        # 영문, 숫자, 언더스코어만 허용
+        if not re.match(r'^[a-zA-Z0-9_]+$', username):
+            raise ValidationError(
+                "사용자명은 영문, 숫자, 언더스코어(_)만 사용할 수 있습니다.",
+                "username"
+            )
+
+        # password 검증
+        if not password or not isinstance(password, str):
+            raise ValidationError("비밀번호는 필수 입력 항목입니다.", "password")
+
+        if len(password) < MIN_PASSWORD_LENGTH:
+            raise ValidationError(
+                f"비밀번호는 {MIN_PASSWORD_LENGTH}자 이상이어야 합니다.",
+                "password"
+            )
+
+        if len(password) > MAX_PASSWORD_LENGTH:
+            raise ValidationError(
+                f"비밀번호는 {MAX_PASSWORD_LENGTH}자를 초과할 수 없습니다.",
+                "password"
+            )
+
+        return {
+            "username": username,
+            "password": password,
+        }
+
+    @classmethod
+    def validate_login_data(cls, data: dict) -> dict:
+        """로그인 데이터를 검증합니다.
+
+        Args:
+            data: 검증할 로그인 데이터.
+
+        Returns:
+            검증된 데이터.
+
+        Raises:
+            ValidationError: 데이터가 유효하지 않은 경우.
+        """
+        username = data.get("username", "")
+        password = data.get("password", "")
+
+        if not username or not isinstance(username, str):
+            raise ValidationError("사용자명을 입력해주세요.", "username")
+
+        if not password or not isinstance(password, str):
+            raise ValidationError("비밀번호를 입력해주세요.", "password")
+
+        return {
+            "username": username.strip(),
+            "password": password,
+        }
+
+    @classmethod
+    def validate_user_sync_data(cls, data: dict) -> dict:
+        """유저 동기화 데이터를 검증합니다.
+
+        WebSocket에서 받은 유저 정보를 검증합니다.
+
+        Args:
+            data: 검증할 유저 동기화 데이터.
+
+        Returns:
+            검증된 데이터.
+
+        Raises:
+            ValidationError: 데이터가 유효하지 않은 경우.
+        """
+        user_id = data.get("user_id")
+        username = data.get("username")
+        is_admin = data.get("is_admin", False)
+
+        # user_id 필수 검증
+        if not user_id:
+            raise ValidationError("user_id는 필수 입력 항목입니다.", "user_id")
+
+        # username 필수 검증
+        if not username or not isinstance(username, str):
+            raise ValidationError("username은 필수 입력 항목입니다.", "username")
+
+        username = username.strip()
+        if len(username) > MAX_USERNAME_LENGTH:
+            username = username[:MAX_USERNAME_LENGTH]
+
+        return {
+            "user_id": str(user_id),
+            "username": username,
+            "is_admin": cls.validate_boolean(is_admin),
+        }

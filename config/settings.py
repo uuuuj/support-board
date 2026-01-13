@@ -39,6 +39,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    # Third-party apps
+    'rest_framework',
+    'drf_spectacular',
+    # Local apps
     'support_board',
 ]
 
@@ -115,4 +119,29 @@ STATIC_URL = 'static/'
 STATICFILES_DIRS = [
     BASE_DIR / 'support_board' / 'static',
 ]
+
+
+# Django REST Framework 설정
+REST_FRAMEWORK = {
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    'DEFAULT_RENDERER_CLASSES': [
+        'rest_framework.renderers.JSONRenderer',
+    ],
+    'DEFAULT_PARSER_CLASSES': [
+        'rest_framework.parsers.JSONParser',
+    ],
+    'EXCEPTION_HANDLER': 'rest_framework.views.exception_handler',
+}
+
+# drf-spectacular 설정 (Swagger)
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Support Board API',
+    'DESCRIPTION': '고객 지원 게시판 API - 게시글, 댓글, 사용자 인증 기능 제공',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+    'SWAGGER_UI_SETTINGS': {
+        'persistAuthorization': True,
+    },
+    'COMPONENT_SPLIT_REQUEST': True,
+}
 
