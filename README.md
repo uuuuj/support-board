@@ -182,7 +182,7 @@ pip install -r requirements-dev.txt
 개별 도구 실행:
 ```bash
 # Bandit - 보안 취약점 스캔
-bandit -r support_board config -c .bandit
+bandit -r support_board config
 
 # pip-audit - 의존성 취약점 검사
 pip-audit

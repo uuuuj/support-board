@@ -37,7 +37,7 @@ def main():
     # 1. Bandit - 보안 취약점 스캔
     success = run_command(
         "Bandit (보안 취약점 스캔)",
-        "bandit -r support_board config -c .bandit"
+        "bandit -r support_board config --skip B101 -x tests,migrations,venv,.venv,node_modules"
     )
     results.append(("Bandit", success))
 

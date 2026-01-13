@@ -5,8 +5,6 @@ Generates HTML/JSON reports for all security tools.
 """
 
 import subprocess
-import sys
-import os
 from datetime import datetime
 from pathlib import Path
 
@@ -23,13 +21,11 @@ def run_bandit():
     """Run Bandit and generate HTML report."""
     print("Running Bandit...")
     output_file = REPORT_DIR / "bandit_report.html"
-    result = subprocess.run(
-        f"bandit -r support_board config -c .bandit -f html -o {output_file}",
-        shell=True,
-        capture_output=True,
-        text=True
+    subprocess.run(
+        f"bandit -r support_board config --skip B101 -x tests,migrations,venv,.venv,node_modules -f html -o {output_file}",
+        shell=True
     )
-    if output_file.exists():
+    if output_file.exists() and output_file.stat().st_size > 0:
         print(f"  -> {output_file}")
         return True
     return False
@@ -39,13 +35,11 @@ def run_pip_audit():
     """Run pip-audit and generate JSON report."""
     print("Running pip-audit...")
     output_file = REPORT_DIR / "pip_audit_report.json"
-    result = subprocess.run(
+    subprocess.run(
         f"pip-audit -f json -o {output_file}",
-        shell=True,
-        capture_output=True,
-        text=True
+        shell=True
     )
-    if output_file.exists():
+    if output_file.exists() and output_file.stat().st_size > 0:
         print(f"  -> {output_file}")
         return True
     return False
@@ -55,13 +49,13 @@ def run_safety():
     """Run Safety and generate JSON report."""
     print("Running Safety...")
     output_file = REPORT_DIR / "safety_report.json"
-    result = subprocess.run(
-        f"safety check --json > {output_file}",
-        shell=True,
-        capture_output=True,
-        text=True
-    )
-    if output_file.exists():
+    with open(output_file, "w", encoding="utf-8") as f:
+        subprocess.run(
+            "safety check --json",
+            shell=True,
+            stdout=f
+        )
+    if output_file.exists() and output_file.stat().st_size > 0:
         print(f"  -> {output_file}")
         return True
     return False
@@ -71,11 +65,9 @@ def run_flake8():
     """Run Flake8 and generate text report."""
     print("Running Flake8...")
     output_file = REPORT_DIR / "flake8_report.txt"
-    result = subprocess.run(
+    subprocess.run(
         f"flake8 support_board config --output-file={output_file}",
-        shell=True,
-        capture_output=True,
-        text=True
+        shell=True
     )
     print(f"  -> {output_file}")
     return True
@@ -85,13 +77,13 @@ def run_detect_secrets():
     """Run detect-secrets and generate JSON report."""
     print("Running detect-secrets...")
     output_file = REPORT_DIR / "secrets_report.json"
-    result = subprocess.run(
-        f"detect-secrets scan --all-files --exclude-files \"\\.env.*\" --exclude-files \"node_modules/.*\" --exclude-files \"staticfiles/.*\" > {output_file}",
-        shell=True,
-        capture_output=True,
-        text=True
-    )
-    if output_file.exists():
+    with open(output_file, "w", encoding="utf-8") as f:
+        subprocess.run(
+            "detect-secrets scan --all-files --exclude-files \"\\.env.*\" --exclude-files \"node_modules/.*\" --exclude-files \"staticfiles/.*\"",
+            shell=True,
+            stdout=f
+        )
+    if output_file.exists() and output_file.stat().st_size > 0:
         print(f"  -> {output_file}")
         return True
     return False
