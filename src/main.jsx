@@ -202,42 +202,19 @@ const PostCreate = ({ onBack, onSubmit, currentUser }) => {
   );
 };
 
-// 더미 댓글 데이터
-const dummyComments = [
-  {
-    id: 1,
-    author: "Mari Babikova",
-    initials: "MB",
-    bgColor: "bg-amber-200",
-    textColor: "text-amber-700",
-    date: "3 days ago",
-    role: null,
-    content: "Thanks Jacob! That would be great.",
-    likes: 0,
-  },
-  {
-    id: 2,
-    author: "Sil",
-    initials: "S",
-    bgColor: "bg-purple-500",
-    textColor: "text-white",
-    date: "9 days ago",
-    role: "Sr Program Manager, Community Experts at Adobe",
-    content: `Love the "add to calendar" feature!\n\nQuestions:\n1- Will this be added to the main Event CMS type, or would we be able to add this feature to any CMS format?\n2- Will there be an option to add all events within a space to our calendars? aka sync all the invites, or just one by one?`,
-    likes: 1,
-  },
-  {
-    id: 3,
-    author: "Ami Asadi",
-    initials: "A",
-    bgColor: "bg-gray-200",
-    textColor: "text-gray-600",
-    date: "8 days ago",
-    role: null,
-    content: `Glad you liked it, Sil! We'll be sharing more in the launch party as well, features like recurring events, event embedding and what's coming next.\n\n1. Easy Events is tied to the Event Space template to keep the experience smooth, simple, and intuitive. That said, events can still be embedded into any post, so you can surface them in any space as needed.\n\n2. While we do support recurring events in the Add to Calendar flow. At the moment, however, batch-adding or syncing all events in a space to a calendar isn't supported, so events need to be added one by one.\n\nLooking forward to sharing more soon!`,
-    likes: 0,
-  },
-];
+// 날짜 포맷 함수
+const formatDate = (dateString) => {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffMs = now - date;
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  if (diffDays === 0) return 'Today';
+  if (diffDays === 1) return 'Yesterday';
+  if (diffDays < 7) return `${diffDays} days ago`;
+  if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
+  return `${Math.floor(diffDays / 30)} months ago`;
+};
 
 // 상세페이지 컴포넌트
 const PostDetail = ({ post, onBack }) => {
@@ -265,14 +242,18 @@ const PostDetail = ({ post, onBack }) => {
       <div className="max-w-4xl mx-auto px-6 py-8">
         {/* Author Info */}
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">
-            <span className="text-gray-600 font-semibold text-lg">
-              {post.user_name?.charAt(0) || '?'}
+          <div className="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center flex-shrink-0">
+            <span className="text-gray-600 font-medium text-lg">
+              {post.user_name?.charAt(0)?.toUpperCase() || '?'}
             </span>
           </div>
-          <div>
-            <p className="font-semibold text-gray-900">{post.user_name || 'Anonymous'}</p>
-            <p className="text-sm text-gray-500">{post.date} · Posted in Product Updates</p>
+          <div className="flex flex-col">
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-gray-900">{post.user_name || 'Anonymous'}</span>
+              <span className="text-sm text-gray-400">·</span>
+              <span className="text-sm text-gray-500">{post.date}</span>
+            </div>
+            <p className="text-sm text-gray-500 font-normal">{post.user_deptname || ''}</p>
           </div>
         </div>
 
@@ -294,41 +275,46 @@ const PostDetail = ({ post, onBack }) => {
         {/* Comments Section */}
         <div className="mt-10 pb-24">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-semibold text-gray-900">Comments</h2>
+            <h2 className="text-lg font-semibold text-gray-900">Comments ({post.comments?.length || 0})</h2>
             <span className="text-sm text-gray-500">Sort by newest first</span>
           </div>
 
           <div className="space-y-6">
-            {dummyComments.map((comment) => (
-              <div key={comment.id} className="flex gap-3">
-                {/* Avatar */}
-                <div className={`w-10 h-10 ${comment.bgColor} rounded-full flex items-center justify-center flex-shrink-0`}>
-                  <span className={`${comment.textColor} font-semibold text-sm`}>
-                    {comment.initials}
-                  </span>
-                </div>
+            {post.comments && post.comments.length > 0 ? (
+              post.comments.map((comment) => (
+                <div key={comment.id} className="flex gap-3">
+                  {/* Avatar */}
+                  <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center flex-shrink-0">
+                    <span className="text-gray-600 font-medium text-sm">
+                      {comment.user_name?.charAt(0)?.toUpperCase() || '?'}
+                    </span>
+                  </div>
 
-                {/* Comment Content */}
-                <div className="flex-1">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <span className="font-semibold text-gray-900">{comment.author}</span>
-                      <p className="text-sm text-gray-500">
-                        {comment.date}
-                        {comment.role && ` · ${comment.role}`}
-                      </p>
+                  {/* Comment Content */}
+                  <div className="flex-1">
+                    <div className="flex items-start justify-between">
+                      <div className="flex flex-col">
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-gray-900">{comment.user_name || 'Anonymous'}</span>
+                          <span className="text-sm text-gray-400">·</span>
+                          <span className="text-sm text-gray-500">{formatDate(comment.created_at)}</span>
+                        </div>
+                        <p className="text-xs text-gray-500 font-normal">{comment.user_deptname || ''}</p>
+                      </div>
+                      <button className="p-1 hover:bg-gray-100 rounded transition-colors">
+                        <MoreHorizontal size={16} className="text-gray-400" />
+                      </button>
                     </div>
-                    <button className="p-1 hover:bg-gray-100 rounded transition-colors">
-                      <MoreHorizontal size={16} className="text-gray-400" />
-                    </button>
-                  </div>
 
-                  <div className="mt-3 text-gray-700 whitespace-pre-line leading-relaxed">
-                    {comment.content}
+                    <div className="mt-2 text-gray-700 whitespace-pre-line leading-relaxed">
+                      {comment.content}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))
+            ) : (
+              <p className="text-gray-500 text-center py-8">아직 댓글이 없습니다.</p>
+            )}
           </div>
         </div>
       </div>
@@ -348,20 +334,6 @@ const PostDetail = ({ post, onBack }) => {
       </div>
     </div>
   );
-};
-
-// 날짜 포맷 함수
-const formatDate = (dateString) => {
-  const date = new Date(dateString);
-  const now = new Date();
-  const diffMs = now - date;
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-  if (diffDays === 0) return 'Today';
-  if (diffDays === 1) return 'Yesterday';
-  if (diffDays < 7) return `${diffDays} days ago`;
-  if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
-  return `${Math.floor(diffDays / 30)} months ago`;
 };
 
 const BoardList = () => {
@@ -500,10 +472,26 @@ const BoardList = () => {
     setCurrentPage(pageNumber);
   };
 
-  // 상세페이지로 이동
-  const handlePostClick = (post) => {
-    setSelectedPost(post);
-    window.scrollTo(0, 0);
+  // 상세페이지로 이동 (상세 API 호출하여 댓글 포함 데이터 가져오기)
+  const handlePostClick = async (post) => {
+    try {
+      const response = await fetch(`${API_BASE}/posts/${post.id}/`);
+      const data = await response.json();
+
+      if (data.access_denied) {
+        alert(data.message || '이 게시글에 접근할 권한이 없습니다.');
+        return;
+      }
+
+      setSelectedPost({
+        ...data,
+        date: formatDate(data.created_at),
+      });
+      window.scrollTo(0, 0);
+    } catch (error) {
+      console.error('Failed to fetch post detail:', error);
+      alert('게시글을 불러오는데 실패했습니다.');
+    }
   };
 
   // 작성 페이지 렌더링
@@ -625,9 +613,14 @@ const BoardList = () => {
               >
                 {/* Author Info */}
                 <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center flex-shrink-0">
+                    <span className="text-gray-600 font-medium text-sm">
+                      {post.user_name?.charAt(0)?.toUpperCase() || '?'}
+                    </span>
+                  </div>
                   <div className="flex flex-col">
                     <span className="text-sm font-semibold text-gray-900">{post.user_name || 'Anonymous'}</span>
-                    <span className="text-xs text-gray-500">{post.date}</span>
+                    <span className="text-xs text-gray-500 font-normal">{post.user_deptname || ''}</span>
                   </div>
                 </div>
 
