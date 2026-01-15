@@ -99,7 +99,7 @@ class Command(BaseCommand):
             post = Post.objects.create(
                 title=title,
                 content=content,
-                author=author,
+                user_name=author,
                 is_resolved=is_resolved,
             )
 
@@ -113,7 +113,7 @@ class Command(BaseCommand):
                 Comment.objects.create(
                     post=post,
                     content=random.choice(comment_templates),
-                    author=random.choice(authors),
+                    user_name=random.choice(authors),
                 )
 
         self.stdout.write(self.style.SUCCESS(f'더미 데이터 생성 완료: 게시글 {posts_count}개'))
