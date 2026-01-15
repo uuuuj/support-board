@@ -19,13 +19,6 @@ urlpatterns = [
     # API - Tags
     path('api/tags/', views.api_tags, name='api_tags'),
 
-    # API - Auth
-    path('api/users/sync/', views.api_user_sync, name='api_user_sync'),
-    path('api/users/register/', views.api_register, name='api_register'),
-    path('api/users/login/', views.api_login, name='api_login'),
-    path('api/users/logout/', views.api_logout, name='api_logout'),
-    path('api/users/me/', views.api_me, name='api_me'),
-
     # Swagger / OpenAPI
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
     path('api/docs/', SpectacularSwaggerView.as_view(url_name='support_board:schema'), name='swagger-ui'),

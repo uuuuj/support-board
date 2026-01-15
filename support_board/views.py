@@ -16,11 +16,10 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse
 
-from .services import ViteManifestService, UserSyncService
-from .models import Post, Comment, Tag, User
+from .services import ViteManifestService
+from .models import Post, Comment, Tag
 from .validators import ValidationService, ValidationError
 from .serializers import (
-    UserSerializer, UserRegisterSerializer, UserLoginSerializer,
     TagSerializer, CommentSerializer, CommentCreateSerializer,
     PostListSerializer, PostDetailSerializer, PostCreateSerializer, PostUpdateSerializer,
     ErrorSerializer, MessageSerializer,
@@ -31,43 +30,50 @@ logger = logging.getLogger(__name__)
 
 # ============ 헬퍼 함수 ============
 
-def get_current_user(request: HttpRequest) -> Optional[User]:
-    """세션에서 현재 로그인한 사용자를 가져옵니다.
+def get_current_user(request: HttpRequest) -> Optional[dict]:
+    """세션에서 현재 로그인한 사용자 정보를 가져옵니다.
 
     Args:
         request: HTTP 요청 객체.
 
     Returns:
-        로그인한 사용자 객체 또는 None.
+        로그인한 사용자 정보 dict 또는 None.
     """
-    user_uuid = request.session.get('user_uuid')
-    if not user_uuid:
+    user_id = request.session.get('user_id')
+    if not user_id:
         return None
 
-    try:
-        return User.objects.get(uuid=user_uuid)
-    except User.DoesNotExist:
-        return None
+    return {
+        'user_id': user_id,
+        'user_name': request.session.get('user_name'),
+        'user_compname': request.session.get('user_compname'),
+        'user_deptname': request.session.get('user_deptname'),
+        'is_admin': request.session.get('is_admin', False),
+    }
 
 
-def serialize_post_with_access(post: Post, current_user: Optional[User]) -> dict:
+def serialize_post_with_access(post: Post, current_user: Optional[dict]) -> dict:
     """게시글을 접근 권한에 따라 직렬화합니다.
 
     Args:
         post: 직렬화할 게시글.
-        current_user: 현재 사용자.
+        current_user: 현재 사용자 정보 dict.
 
     Returns:
         직렬화된 게시글 데이터.
     """
-    can_access = post.can_access(current_user)
+    user_id = current_user.get('user_id') if current_user else None
+    is_admin = current_user.get('is_admin', False) if current_user else False
+    can_access = post.can_access(user_id, is_admin)
 
     data = {
         'id': post.id,
         'title': post.title if can_access else '비밀글입니다.',
         'content': post.content if can_access else '',
-        'author': post.author,
-        'user_uuid': str(post.user.uuid) if post.user else None,
+        'user_name': post.user_name,
+        'user_id': post.user_id,
+        'user_compname': post.user_compname if can_access else None,
+        'user_deptname': post.user_deptname if can_access else None,
         'tags': [tag.name for tag in post.tags.all()] if can_access else [],
         'is_resolved': post.is_resolved,
         'is_private': post.is_private,
@@ -196,8 +202,10 @@ def api_posts_create(request: HttpRequest) -> Response:
         post = Post.objects.create(
             title=validated_data.get('title', ''),
             content=validated_data.get('content', ''),
-            author=validated_data.get('author', 'Anonymous'),
-            user=current_user,
+            user_name=validated_data.get('user_name', 'Anonymous'),
+            user_id=current_user.get('user_id') if current_user else None,
+            user_compname=current_user.get('user_compname') if current_user else None,
+            user_deptname=current_user.get('user_deptname') if current_user else None,
             is_resolved=validated_data.get('is_resolved', False),
             is_private=is_private,
         )
@@ -237,11 +245,15 @@ def api_post_detail(request: HttpRequest, post_id: int) -> Response:
     post = get_object_or_404(Post, id=post_id)
     current_user = get_current_user(request)
 
-    if not post.can_access(current_user):
-        return Response(
-            {'error': '이 게시글에 접근할 권한이 없습니다.'},
-            status=status.HTTP_403_FORBIDDEN
-        )
+    user_id = current_user.get('user_id') if current_user else None
+    is_admin = current_user.get('is_admin', False) if current_user else False
+
+    if not post.can_access(user_id, is_admin):
+        logger.warning(f"게시글 접근 거부: post_id={post_id}, user_id={user_id}")
+        return Response({
+            'access_denied': True,
+            'message': '이 게시글에 접근할 권한이 없습니다.',
+        })
 
     serializer = PostDetailSerializer(post)
     return Response(serializer.data)
@@ -265,11 +277,15 @@ def api_post_update(request: HttpRequest, post_id: int) -> Response:
     post = get_object_or_404(Post, id=post_id)
     current_user = get_current_user(request)
 
-    if not post.can_access(current_user):
-        return Response(
-            {'error': '이 게시글에 접근할 권한이 없습니다.'},
-            status=status.HTTP_403_FORBIDDEN
-        )
+    user_id = current_user.get('user_id') if current_user else None
+    is_admin = current_user.get('is_admin', False) if current_user else False
+
+    if not post.can_access(user_id, is_admin):
+        logger.warning(f"게시글 수정 권한 거부: post_id={post_id}, user_id={user_id}")
+        return Response({
+            'access_denied': True,
+            'message': '이 게시글을 수정할 권한이 없습니다.',
+        })
 
     try:
         ValidationService.validate_json_size(request.body)
@@ -279,8 +295,8 @@ def api_post_update(request: HttpRequest, post_id: int) -> Response:
             post.title = validated_data['title']
         if 'content' in validated_data and validated_data['content']:
             post.content = validated_data['content']
-        if 'author' in validated_data and validated_data['author']:
-            post.author = validated_data['author']
+        if 'user_name' in validated_data and validated_data['user_name']:
+            post.user_name = validated_data['user_name']
         if 'is_resolved' in validated_data:
             post.is_resolved = validated_data['is_resolved']
         if 'is_private' in validated_data:
@@ -299,13 +315,16 @@ def api_post_update(request: HttpRequest, post_id: int) -> Response:
 
     except ValidationError as e:
         logger.warning(f"게시글 수정 검증 실패: {e.message}")
-        return Response({'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({
+            'access_denied': True,
+            'message': e.message,
+        })
     except Exception as e:
         logger.error(f"게시글 수정 중 오류 발생: {e}")
-        return Response(
-            {'error': '요청을 처리하는 중 오류가 발생했습니다.'},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
+        return Response({
+            'access_denied': True,
+            'message': '요청을 처리하는 중 오류가 발생했습니다.',
+        })
 
 
 @extend_schema(
@@ -324,14 +343,18 @@ def api_post_delete(request: HttpRequest, post_id: int) -> Response:
     post = get_object_or_404(Post, id=post_id)
     current_user = get_current_user(request)
 
-    if not post.can_access(current_user):
-        return Response(
-            {'error': '이 게시글에 접근할 권한이 없습니다.'},
-            status=status.HTTP_403_FORBIDDEN
-        )
+    user_id = current_user.get('user_id') if current_user else None
+    is_admin = current_user.get('is_admin', False) if current_user else False
+
+    if not post.can_access(user_id, is_admin):
+        logger.warning(f"게시글 삭제 권한 거부: post_id={post_id}, user_id={user_id}")
+        return Response({
+            'access_denied': True,
+            'message': '이 게시글을 삭제할 권한이 없습니다.',
+        })
 
     post.delete()
-    return Response(status=status.HTTP_204_NO_CONTENT)
+    return Response({'success': True, 'message': '게시글이 삭제되었습니다.'})
 
 
 # ============ 댓글 API ============
@@ -354,11 +377,15 @@ def api_post_comments(request: HttpRequest, post_id: int) -> Response:
     post = get_object_or_404(Post, id=post_id)
     current_user = get_current_user(request)
 
-    if not post.can_access(current_user):
-        return Response(
-            {'error': '이 게시글에 댓글을 작성할 권한이 없습니다.'},
-            status=status.HTTP_403_FORBIDDEN
-        )
+    user_id = current_user.get('user_id') if current_user else None
+    is_admin = current_user.get('is_admin', False) if current_user else False
+
+    if not post.can_access(user_id, is_admin):
+        logger.warning(f"댓글 작성 권한 거부: post_id={post_id}, user_id={user_id}")
+        return Response({
+            'access_denied': True,
+            'message': '이 게시글에 댓글을 작성할 권한이 없습니다.',
+        })
 
     try:
         ValidationService.validate_json_size(request.body)
@@ -367,7 +394,10 @@ def api_post_comments(request: HttpRequest, post_id: int) -> Response:
         comment = Comment.objects.create(
             post=post,
             content=validated_data['content'],
-            author=validated_data['author'],
+            user_name=validated_data.get('user_name', 'Anonymous'),
+            user_id=current_user.get('user_id') if current_user else None,
+            user_compname=current_user.get('user_compname') if current_user else None,
+            user_deptname=current_user.get('user_deptname') if current_user else None,
         )
 
         serializer = CommentSerializer(comment)
@@ -375,13 +405,16 @@ def api_post_comments(request: HttpRequest, post_id: int) -> Response:
 
     except ValidationError as e:
         logger.warning(f"댓글 생성 검증 실패: {e.message}")
-        return Response({'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({
+            'access_denied': True,
+            'message': e.message,
+        })
     except Exception as e:
         logger.error(f"댓글 생성 중 오류 발생: {e}")
-        return Response(
-            {'error': '요청을 처리하는 중 오류가 발생했습니다.'},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
+        return Response({
+            'access_denied': True,
+            'message': '요청을 처리하는 중 오류가 발생했습니다.',
+        })
 
 
 # ============ 태그 API ============
@@ -403,182 +436,3 @@ def api_tags(request: HttpRequest) -> Response:
     })
 
 
-# ============ 인증 API ============
-
-@extend_schema(
-    summary='유저 동기화',
-    description='WebSocket에서 받은 유저 정보를 세션과 DB에 동기화합니다.',
-    request=UserRegisterSerializer,
-    responses={
-        200: UserSerializer,
-        201: UserSerializer,
-        400: ErrorSerializer,
-    },
-    tags=['Auth'],
-)
-@api_view(['POST'])
-def api_user_sync(request: HttpRequest) -> Response:
-    """유저 동기화 API.
-
-    WebSocket에서 받은 유저 정보를 세션과 DB에 저장합니다.
-    """
-    try:
-        ValidationService.validate_json_size(request.body)
-        validated_data = ValidationService.validate_user_sync_data(request.data)
-
-        user, created = UserSyncService.sync_user(validated_data)
-        UserSyncService.save_to_session(request, user)
-
-        serializer = UserSerializer(user)
-        return Response(
-            serializer.data,
-            status=status.HTTP_201_CREATED if created else status.HTTP_200_OK
-        )
-
-    except ValidationError as e:
-        logger.warning(f"유저 동기화 검증 실패: {e.message}")
-        return Response({'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
-    except ValueError as e:
-        logger.warning(f"유저 동기화 실패: {e}")
-        return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-    except Exception as e:
-        logger.error(f"유저 동기화 중 오류 발생: {e}")
-        return Response(
-            {'error': '요청을 처리하는 중 오류가 발생했습니다.'},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
-
-
-@extend_schema(
-    summary='회원가입',
-    description='새로운 사용자를 등록합니다.',
-    request=UserRegisterSerializer,
-    responses={
-        201: UserSerializer,
-        400: ErrorSerializer,
-        409: ErrorSerializer,
-    },
-    tags=['Auth'],
-)
-@api_view(['POST'])
-def api_register(request: HttpRequest) -> Response:
-    """회원가입 API."""
-    try:
-        ValidationService.validate_json_size(request.body)
-        validated_data = ValidationService.validate_register_data(request.data)
-
-        if User.objects.filter(username=validated_data['username']).exists():
-            return Response(
-                {'error': '이미 사용 중인 사용자명입니다.'},
-                status=status.HTTP_409_CONFLICT
-            )
-
-        user = User(username=validated_data['username'])
-        user.set_password(validated_data['password'])
-        user.save()
-
-        logger.info(f"새 사용자 등록: {user.username}")
-        serializer = UserSerializer(user)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-    except ValidationError as e:
-        logger.warning(f"회원가입 검증 실패: {e.message}")
-        return Response({'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
-    except Exception as e:
-        logger.error(f"회원가입 중 오류 발생: {e}")
-        return Response(
-            {'error': '요청을 처리하는 중 오류가 발생했습니다.'},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
-
-
-@extend_schema(
-    summary='로그인',
-    description='사용자 인증을 수행하고 세션을 생성합니다.',
-    request=UserLoginSerializer,
-    responses={
-        200: UserSerializer,
-        400: ErrorSerializer,
-        401: ErrorSerializer,
-    },
-    tags=['Auth'],
-)
-@api_view(['POST'])
-def api_login(request: HttpRequest) -> Response:
-    """로그인 API."""
-    try:
-        ValidationService.validate_json_size(request.body)
-        validated_data = ValidationService.validate_login_data(request.data)
-
-        try:
-            user = User.objects.get(username=validated_data['username'])
-        except User.DoesNotExist:
-            return Response(
-                {'error': '사용자명 또는 비밀번호가 올바르지 않습니다.'},
-                status=status.HTTP_401_UNAUTHORIZED
-            )
-
-        if not user.check_password(validated_data['password']):
-            return Response(
-                {'error': '사용자명 또는 비밀번호가 올바르지 않습니다.'},
-                status=status.HTTP_401_UNAUTHORIZED
-            )
-
-        request.session['user_uuid'] = str(user.uuid)
-        request.session['username'] = user.username
-        request.session['is_admin'] = user.is_admin
-
-        logger.info(f"사용자 로그인: {user.username}")
-        serializer = UserSerializer(user)
-        return Response(serializer.data)
-
-    except ValidationError as e:
-        logger.warning(f"로그인 검증 실패: {e.message}")
-        return Response({'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
-    except Exception as e:
-        logger.error(f"로그인 중 오류 발생: {e}")
-        return Response(
-            {'error': '요청을 처리하는 중 오류가 발생했습니다.'},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
-
-
-@extend_schema(
-    summary='로그아웃',
-    description='현재 세션을 종료합니다.',
-    responses={
-        200: MessageSerializer,
-    },
-    tags=['Auth'],
-)
-@api_view(['POST'])
-def api_logout(request: HttpRequest) -> Response:
-    """로그아웃 API."""
-    username = request.session.get('username', 'Unknown')
-    request.session.flush()
-    logger.info(f"사용자 로그아웃: {username}")
-    return Response({'message': '로그아웃되었습니다.'})
-
-
-@extend_schema(
-    summary='현재 사용자 정보',
-    description='현재 로그인한 사용자의 정보를 조회합니다.',
-    responses={
-        200: UserSerializer,
-        401: ErrorSerializer,
-    },
-    tags=['Auth'],
-)
-@api_view(['GET'])
-def api_me(request: HttpRequest) -> Response:
-    """현재 사용자 정보 조회 API."""
-    current_user = get_current_user(request)
-
-    if not current_user:
-        return Response(
-            {'error': '로그인이 필요합니다.'},
-            status=status.HTTP_401_UNAUTHORIZED
-        )
-
-    serializer = UserSerializer(current_user)
-    return Response(serializer.data)

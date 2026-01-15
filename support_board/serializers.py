@@ -5,42 +5,7 @@ Django REST Framework Serializer를 사용하여
 """
 
 from rest_framework import serializers
-from .models import User, Post, Comment, Tag
-
-
-class UserSerializer(serializers.ModelSerializer):
-    """사용자 정보 직렬화.
-
-    비밀번호는 응답에서 제외됩니다.
-    """
-
-    class Meta:
-        model = User
-        fields = ['uuid', 'username', 'is_admin', 'created_at']
-        read_only_fields = ['uuid', 'is_admin', 'created_at']
-
-
-class UserRegisterSerializer(serializers.Serializer):
-    """회원가입 요청 직렬화."""
-
-    username = serializers.CharField(
-        min_length=3,
-        max_length=50,
-        help_text='사용자명 (3-50자, 영문/숫자/언더스코어)'
-    )
-    password = serializers.CharField(
-        min_length=4,
-        max_length=128,
-        write_only=True,
-        help_text='비밀번호 (4-128자)'
-    )
-
-
-class UserLoginSerializer(serializers.Serializer):
-    """로그인 요청 직렬화."""
-
-    username = serializers.CharField(help_text='사용자명')
-    password = serializers.CharField(write_only=True, help_text='비밀번호')
+from .models import Post, Comment, Tag
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -56,7 +21,10 @@ class CommentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Comment
-        fields = ['id', 'content', 'author', 'created_at', 'updated_at']
+        fields = [
+            'id', 'content', 'user_name', 'user_id',
+            'user_compname', 'user_deptname', 'created_at', 'updated_at'
+        ]
         read_only_fields = ['id', 'created_at', 'updated_at']
 
 
@@ -67,7 +35,7 @@ class CommentCreateSerializer(serializers.Serializer):
         max_length=10000,
         help_text='댓글 내용 (최대 10000자)'
     )
-    author = serializers.CharField(
+    user_name = serializers.CharField(
         max_length=50,
         required=False,
         default='Anonymous',
@@ -79,13 +47,13 @@ class PostListSerializer(serializers.ModelSerializer):
     """게시글 목록 직렬화."""
 
     tags = serializers.StringRelatedField(many=True, read_only=True)
-    user_uuid = serializers.UUIDField(source='user.uuid', read_only=True, allow_null=True)
     comments_count = serializers.IntegerField(source='comments.count', read_only=True)
 
     class Meta:
         model = Post
         fields = [
-            'id', 'title', 'content', 'author', 'user_uuid',
+            'id', 'title', 'content', 'user_name', 'user_id',
+            'user_compname', 'user_deptname',
             'tags', 'is_resolved', 'is_private', 'comments_count',
             'created_at', 'updated_at'
         ]
@@ -95,14 +63,14 @@ class PostDetailSerializer(serializers.ModelSerializer):
     """게시글 상세 직렬화 (댓글 포함)."""
 
     tags = serializers.StringRelatedField(many=True, read_only=True)
-    user_uuid = serializers.UUIDField(source='user.uuid', read_only=True, allow_null=True)
     comments = CommentSerializer(many=True, read_only=True)
     comments_count = serializers.IntegerField(source='comments.count', read_only=True)
 
     class Meta:
         model = Post
         fields = [
-            'id', 'title', 'content', 'author', 'user_uuid',
+            'id', 'title', 'content', 'user_name', 'user_id',
+            'user_compname', 'user_deptname',
             'tags', 'is_resolved', 'is_private', 'comments_count',
             'comments', 'created_at', 'updated_at'
         ]
@@ -119,7 +87,7 @@ class PostCreateSerializer(serializers.Serializer):
         max_length=10000,
         help_text='게시글 내용 (최대 10000자)'
     )
-    author = serializers.CharField(
+    user_name = serializers.CharField(
         max_length=50,
         required=False,
         default='Anonymous',
@@ -156,7 +124,7 @@ class PostUpdateSerializer(serializers.Serializer):
         required=False,
         help_text='게시글 내용 (최대 10000자)'
     )
-    author = serializers.CharField(
+    user_name = serializers.CharField(
         max_length=50,
         required=False,
         help_text='작성자'
