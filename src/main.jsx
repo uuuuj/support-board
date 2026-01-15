@@ -11,15 +11,14 @@ const API_BASE = '/support/api';
 const PostCreate = ({ onBack, onSubmit, currentUser }) => {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
-  const [author, setAuthor] = useState(currentUser?.username || '');
   const [resolved, setResolved] = useState(false);
   const [isPrivate, setIsPrivate] = useState(false);
   const [tags, setTags] = useState('');
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!title.trim() || !content.trim() || !author.trim()) {
-      alert('작성자, 제목, 내용을 모두 입력해주세요.');
+    if (!title.trim() || !content.trim()) {
+      alert('제목과 내용을 모두 입력해주세요.');
       return;
     }
     if (isPrivate && !currentUser) {
@@ -29,7 +28,6 @@ const PostCreate = ({ onBack, onSubmit, currentUser }) => {
     onSubmit({
       title,
       content,
-      author,
       is_private: isPrivate,
       is_resolved: resolved,
       tags: tags.split(',').map(t => t.trim()).filter(t => t),
@@ -52,20 +50,6 @@ const PostCreate = ({ onBack, onSubmit, currentUser }) => {
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Author */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-900 mb-2">
-              Author
-            </label>
-            <input
-              type="text"
-              value={author}
-              onChange={(e) => setAuthor(e.target.value)}
-              placeholder="이름을 입력하세요"
-              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-            />
-          </div>
-
           {/* Title */}
           <div>
             <label className="block text-sm font-semibold text-gray-900 mb-2">
