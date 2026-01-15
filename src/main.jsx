@@ -267,11 +267,11 @@ const PostDetail = ({ post, onBack }) => {
         <div className="flex items-center gap-3 mb-6">
           <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">
             <span className="text-gray-600 font-semibold text-lg">
-              {post.author.charAt(0)}
+              {post.user_name?.charAt(0) || '?'}
             </span>
           </div>
           <div>
-            <p className="font-semibold text-gray-900">{post.author}</p>
+            <p className="font-semibold text-gray-900">{post.user_name || 'Anonymous'}</p>
             <p className="text-sm text-gray-500">{post.date} · Posted in Product Updates</p>
           </div>
         </div>
@@ -449,7 +449,7 @@ const BoardList = () => {
     { value: 'all', label: '전체' },
     { value: 'title', label: '제목' },
     { value: 'content', label: '내용' },
-    { value: 'author', label: '작성자' },
+    { value: 'user_name', label: '작성자' },
     { value: 'tag', label: '태그' },
   ];
 
@@ -464,7 +464,6 @@ const BoardList = () => {
         body: JSON.stringify({
           title: newPost.title,
           content: newPost.content,
-          author: newPost.author || 'Anonymous',
           tags: newPost.tags || [],
           is_resolved: newPost.is_resolved || false,
           is_private: newPost.is_private || false,
@@ -627,7 +626,7 @@ const BoardList = () => {
                 {/* Author Info */}
                 <div className="flex items-center gap-3 mb-4">
                   <div className="flex flex-col">
-                    <span className="text-sm font-semibold text-gray-900">{post.author}</span>
+                    <span className="text-sm font-semibold text-gray-900">{post.user_name || 'Anonymous'}</span>
                     <span className="text-xs text-gray-500">{post.date}</span>
                   </div>
                 </div>
