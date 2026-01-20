@@ -158,28 +158,6 @@ const PostCreate = ({ onBack, onSubmit, currentUser }) => {
             </div>
           </div>
 
-          {/* SEO Options */}
-          <div className="sb-flex sb-items-center sb-justify-between sb-py-3 sb-border-t sb-border-gray-100">
-            <div className="sb-flex sb-items-center sb-gap-2">
-              <span className="sb-text-sm sb-font-semibold sb-text-gray-900">SEO options</span>
-              <svg className="sb-w-4 sb-h-4 sb-text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
-              </svg>
-            </div>
-            <Plus size={18} className="sb-text-gray-400" />
-          </div>
-
-          {/* Advanced Options */}
-          <div className="sb-flex sb-items-center sb-justify-between sb-py-3 sb-border-t sb-border-gray-100">
-            <div className="sb-flex sb-items-center sb-gap-2">
-              <span className="sb-text-sm sb-font-semibold sb-text-gray-900">Advanced options</span>
-              <svg className="sb-w-4 sb-h-4 sb-text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
-              </svg>
-            </div>
-            <Plus size={18} className="sb-text-gray-400" />
-          </div>
-
           {/* Buttons */}
           <div className="sb-flex sb-items-center sb-justify-end sb-gap-3 sb-pt-4">
             <button
@@ -230,7 +208,7 @@ const PostDetail = ({ post, onBack }) => {
             >
               <ArrowLeft size={20} className="sb-text-gray-600" />
             </button>
-            <span className="sb-font-semibold sb-text-gray-900">Product Updates</span>
+            <span className="sb-font-semibold sb-text-gray-900">게시글</span>
           </div>
           <button className="sb-p-2 hover:sb-bg-gray-100 sb-rounded-lg sb-transition-colors">
             <MoreHorizontal size={20} className="sb-text-gray-600" />
@@ -264,11 +242,8 @@ const PostDetail = ({ post, onBack }) => {
 
         {/* Body */}
         <div className="sb-prose sb-prose-gray sb-max-w-none">
-          <p className="sb-text-gray-700 sb-leading-relaxed sb-mb-6">
+          <p className="sb-text-gray-700 sb-leading-relaxed sb-mb-6 sb-whitespace-pre-line">
             {post.content}
-          </p>
-          <p className="sb-text-gray-700 sb-leading-relaxed sb-mb-6">
-            And the big one: <strong>Native Events</strong> is about to land. End-to-end creation, view-vs-attendance insights, post embeds, hybrid (in-person & virtual) support, and recurring RSVPs.
           </p>
         </div>
 
@@ -584,16 +559,7 @@ const BoardList = () => {
           )}
         </div>
 
-        <div className="sb-flex sb-justify-between sb-items-center sb-mb-8">
-          <div className="sb-flex sb-gap-4 sb-items-center">
-            <button className="sb-bg-gray-900 hover:sb-bg-gray-800 sb-text-white sb-px-5 sb-py-2 sb-rounded-full sb-text-sm sb-font-medium sb-transition-colors">
-              Product
-            </button>
-            <button className="sb-text-gray-500 hover:sb-text-gray-900 sb-px-2 sb-text-sm sb-font-medium sb-transition-colors">
-              Events
-            </button>
-          </div>
-
+        <div className="sb-flex sb-justify-end sb-items-center sb-mb-8">
           <button
             onClick={() => setIsCreating(true)}
             className="sb-flex sb-items-center sb-gap-2 sb-bg-emerald-500 hover:sb-bg-emerald-600 sb-text-white sb-px-4 sb-py-2 sb-rounded-lg sb-text-sm sb-font-medium sb-transition-colors"
