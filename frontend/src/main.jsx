@@ -4,8 +4,8 @@ import './index.css';
 import { MessageSquare, ChevronLeft, ChevronRight, ArrowLeft, MoreHorizontal, Plus, X, Search, Filter, ChevronDown, Lock } from 'lucide-react';
 import { startUserSyncPolling, getCurrentUser } from './userSync';
 
-// API 기본 URL
-const API_BASE = '/support/api';
+// API 기본 URL (환경 변수에서 가져오거나 기본값 사용)
+const API_BASE = import.meta.env.VITE_API_BASE || '/support/api';
 
 // 게시글 작성 컴포넌트
 const PostCreate = ({ onBack, onSubmit, currentUser }) => {
@@ -35,24 +35,24 @@ const PostCreate = ({ onBack, onSubmit, currentUser }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 font-sans flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-sm max-w-2xl w-full p-8">
+    <div className="sb-min-h-screen sb-bg-gray-100 sb-font-sans sb-flex sb-items-center sb-justify-center sb-p-4">
+      <div className="sb-bg-white sb-rounded-2xl sb-shadow-sm sb-max-w-2xl sb-w-full sb-p-8">
         {/* Header */}
-        <div className="flex items-center gap-3 mb-8">
+        <div className="sb-flex sb-items-center sb-gap-3 sb-mb-8">
           <button
             onClick={onBack}
-            className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
+            className="sb-p-1 hover:sb-bg-gray-100 sb-rounded-lg sb-transition-colors"
           >
-            <ArrowLeft size={20} className="text-gray-600" />
+            <ArrowLeft size={20} className="sb-text-gray-600" />
           </button>
-          <h1 className="text-lg font-semibold text-gray-900">Create a new question</h1>
+          <h1 className="sb-text-lg sb-font-semibold sb-text-gray-900">Create a new question</h1>
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="sb-space-y-6">
           {/* Title */}
           <div>
-            <label className="block text-sm font-semibold text-gray-900 mb-2">
+            <label className="sb-block sb-text-sm sb-font-semibold sb-text-gray-900 sb-mb-2">
               Title
             </label>
             <input
@@ -60,49 +60,49 @@ const PostCreate = ({ onBack, onSubmit, currentUser }) => {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="제목을 입력하세요"
-              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+              className="sb-w-full sb-px-4 sb-py-3 sb-border sb-border-gray-200 sb-rounded-lg focus:sb-outline-none focus:sb-ring-2 focus:sb-ring-emerald-500 focus:sb-border-transparent"
             />
           </div>
 
           {/* Content */}
           <div>
-            <label className="block text-sm font-semibold text-gray-900 mb-2">
+            <label className="sb-block sb-text-sm sb-font-semibold sb-text-gray-900 sb-mb-2">
               Content
             </label>
-            <div className="border border-gray-200 rounded-lg overflow-hidden">
+            <div className="sb-border sb-border-gray-200 sb-rounded-lg sb-overflow-hidden">
               <textarea
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 placeholder="What are your thoughts?"
                 rows={8}
-                className="w-full px-4 py-3 focus:outline-none resize-none"
+                className="sb-w-full sb-px-4 sb-py-3 focus:sb-outline-none sb-resize-none"
               />
               {/* Toolbar */}
-              <div className="flex items-center gap-1 px-3 py-2 border-t border-gray-100">
-                <button type="button" className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                  <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="sb-flex sb-items-center sb-gap-1 sb-px-3 sb-py-2 sb-border-t sb-border-gray-100">
+                <button type="button" className="sb-p-2 hover:sb-bg-gray-100 sb-rounded-lg sb-transition-colors">
+                  <svg className="sb-w-5 sb-h-5 sb-text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                   </svg>
                 </button>
-                <button type="button" className="p-2 hover:bg-gray-100 rounded-lg transition-colors text-gray-500 font-semibold text-sm">
+                <button type="button" className="sb-p-2 hover:sb-bg-gray-100 sb-rounded-lg sb-transition-colors sb-text-gray-500 sb-font-semibold sb-text-sm">
                   Aa
                 </button>
-                <button type="button" className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                  <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <button type="button" className="sb-p-2 hover:sb-bg-gray-100 sb-rounded-lg sb-transition-colors">
+                  <svg className="sb-w-5 sb-h-5 sb-text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <circle cx="12" cy="12" r="10" strokeWidth={2} />
                     <path strokeLinecap="round" strokeWidth={2} d="M8 14s1.5 2 4 2 4-2 4-2" />
                     <circle cx="9" cy="9" r="1" fill="currentColor" />
                     <circle cx="15" cy="9" r="1" fill="currentColor" />
                   </svg>
                 </button>
-                <button type="button" className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                  <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <button type="button" className="sb-p-2 hover:sb-bg-gray-100 sb-rounded-lg sb-transition-colors">
+                  <svg className="sb-w-5 sb-h-5 sb-text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <rect x="3" y="3" width="18" height="18" rx="2" strokeWidth={2} />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 15l5-5 4 4 5-5 4 4" />
                   </svg>
                 </button>
-                <button type="button" className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                  <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <button type="button" className="sb-p-2 hover:sb-bg-gray-100 sb-rounded-lg sb-transition-colors">
+                  <svg className="sb-w-5 sb-h-5 sb-text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
                   </svg>
                 </button>
@@ -111,87 +111,87 @@ const PostCreate = ({ onBack, onSubmit, currentUser }) => {
           </div>
 
           {/* Resolved Toggle */}
-          <div className="flex items-center justify-between py-2">
-            <span className="text-sm font-semibold text-gray-900">Resolved</span>
+          <div className="sb-flex sb-items-center sb-justify-between sb-py-2">
+            <span className="sb-text-sm sb-font-semibold sb-text-gray-900">Resolved</span>
             <button
               type="button"
               onClick={() => setResolved(!resolved)}
-              className={`w-12 h-7 rounded-full transition-colors ${resolved ? 'bg-emerald-500' : 'bg-gray-200'}`}
+              className={`sb-w-12 sb-h-7 sb-rounded-full sb-transition-colors ${resolved ? 'sb-bg-emerald-500' : 'sb-bg-gray-200'}`}
             >
-              <div className={`w-5 h-5 bg-white rounded-full shadow-sm transition-transform ${resolved ? 'translate-x-6' : 'translate-x-1'}`} />
+              <div className={`sb-w-5 sb-h-5 sb-bg-white sb-rounded-full sb-shadow-sm sb-transition-transform ${resolved ? 'sb-translate-x-6' : 'sb-translate-x-1'}`} />
             </button>
           </div>
 
           {/* Private Toggle */}
-          <div className="flex items-center justify-between py-2">
-            <div className="flex items-center gap-2">
-              <Lock size={16} className="text-gray-500" />
-              <span className="text-sm font-semibold text-gray-900">비밀글</span>
+          <div className="sb-flex sb-items-center sb-justify-between sb-py-2">
+            <div className="sb-flex sb-items-center sb-gap-2">
+              <Lock size={16} className="sb-text-gray-500" />
+              <span className="sb-text-sm sb-font-semibold sb-text-gray-900">비밀글</span>
               {!currentUser && (
-                <span className="text-xs text-gray-400">(로그인 필요)</span>
+                <span className="sb-text-xs sb-text-gray-400">(로그인 필요)</span>
               )}
             </div>
             <button
               type="button"
               onClick={() => currentUser && setIsPrivate(!isPrivate)}
               disabled={!currentUser}
-              className={`w-12 h-7 rounded-full transition-colors ${isPrivate ? 'bg-emerald-500' : 'bg-gray-200'} ${!currentUser ? 'opacity-50 cursor-not-allowed' : ''}`}
+              className={`sb-w-12 sb-h-7 sb-rounded-full sb-transition-colors ${isPrivate ? 'sb-bg-emerald-500' : 'sb-bg-gray-200'} ${!currentUser ? 'sb-opacity-50 sb-cursor-not-allowed' : ''}`}
             >
-              <div className={`w-5 h-5 bg-white rounded-full shadow-sm transition-transform ${isPrivate ? 'translate-x-6' : 'translate-x-1'}`} />
+              <div className={`sb-w-5 sb-h-5 sb-bg-white sb-rounded-full sb-shadow-sm sb-transition-transform ${isPrivate ? 'sb-translate-x-6' : 'sb-translate-x-1'}`} />
             </button>
           </div>
 
           {/* Tags */}
           <div>
-            <label className="block text-sm font-semibold text-gray-900 mb-2">
+            <label className="sb-block sb-text-sm sb-font-semibold sb-text-gray-900 sb-mb-2">
               Tags
             </label>
-            <div className="relative">
+            <div className="sb-relative">
               <input
                 type="text"
                 value={tags}
                 onChange={(e) => setTags(e.target.value)}
                 placeholder="Add tags..."
-                className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent pr-10"
+                className="sb-w-full sb-px-4 sb-py-3 sb-border sb-border-gray-200 sb-rounded-lg focus:sb-outline-none focus:sb-ring-2 focus:sb-ring-emerald-500 focus:sb-border-transparent sb-pr-10"
               />
-              <ChevronRight size={18} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 rotate-90" />
+              <ChevronRight size={18} className="sb-absolute sb-right-3 sb-top-1/2 -sb-translate-y-1/2 sb-text-gray-400 sb-rotate-90" />
             </div>
           </div>
 
           {/* SEO Options */}
-          <div className="flex items-center justify-between py-3 border-t border-gray-100">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-semibold text-gray-900">SEO options</span>
-              <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="sb-flex sb-items-center sb-justify-between sb-py-3 sb-border-t sb-border-gray-100">
+            <div className="sb-flex sb-items-center sb-gap-2">
+              <span className="sb-text-sm sb-font-semibold sb-text-gray-900">SEO options</span>
+              <svg className="sb-w-4 sb-h-4 sb-text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
               </svg>
             </div>
-            <Plus size={18} className="text-gray-400" />
+            <Plus size={18} className="sb-text-gray-400" />
           </div>
 
           {/* Advanced Options */}
-          <div className="flex items-center justify-between py-3 border-t border-gray-100">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-semibold text-gray-900">Advanced options</span>
-              <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="sb-flex sb-items-center sb-justify-between sb-py-3 sb-border-t sb-border-gray-100">
+            <div className="sb-flex sb-items-center sb-gap-2">
+              <span className="sb-text-sm sb-font-semibold sb-text-gray-900">Advanced options</span>
+              <svg className="sb-w-4 sb-h-4 sb-text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
               </svg>
             </div>
-            <Plus size={18} className="text-gray-400" />
+            <Plus size={18} className="sb-text-gray-400" />
           </div>
 
           {/* Buttons */}
-          <div className="flex items-center justify-end gap-3 pt-4">
+          <div className="sb-flex sb-items-center sb-justify-end sb-gap-3 sb-pt-4">
             <button
               type="button"
               onClick={onBack}
-              className="px-6 py-2.5 border border-gray-200 rounded-full text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+              className="sb-px-6 sb-py-2.5 sb-border sb-border-gray-200 sb-rounded-full sb-text-sm sb-font-medium sb-text-gray-700 hover:sb-bg-gray-50 sb-transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-6 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-full text-sm font-medium transition-colors"
+              className="sb-px-6 sb-py-2.5 sb-bg-emerald-500 hover:sb-bg-emerald-600 sb-text-white sb-rounded-full sb-text-sm sb-font-medium sb-transition-colors"
             >
               Publish
             </button>
@@ -219,116 +219,116 @@ const formatDate = (dateString) => {
 // 상세페이지 컴포넌트
 const PostDetail = ({ post, onBack }) => {
   return (
-    <div className="min-h-screen bg-white font-sans">
+    <div className="sb-min-h-screen sb-bg-white sb-font-sans">
       {/* Header */}
-      <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4">
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
+      <div className="sb-sticky sb-top-0 sb-bg-white sb-border-b sb-border-gray-100 sb-px-6 sb-py-4">
+        <div className="sb-max-w-4xl sb-mx-auto sb-flex sb-items-center sb-justify-between">
+          <div className="sb-flex sb-items-center sb-gap-3">
             <button
               onClick={onBack}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              className="sb-p-2 hover:sb-bg-gray-100 sb-rounded-lg sb-transition-colors"
             >
-              <ArrowLeft size={20} className="text-gray-600" />
+              <ArrowLeft size={20} className="sb-text-gray-600" />
             </button>
-            <span className="font-semibold text-gray-900">Product Updates</span>
+            <span className="sb-font-semibold sb-text-gray-900">Product Updates</span>
           </div>
-          <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-            <MoreHorizontal size={20} className="text-gray-600" />
+          <button className="sb-p-2 hover:sb-bg-gray-100 sb-rounded-lg sb-transition-colors">
+            <MoreHorizontal size={20} className="sb-text-gray-600" />
           </button>
         </div>
       </div>
 
       {/* Content */}
-      <div className="max-w-4xl mx-auto px-6 py-8">
+      <div className="sb-max-w-4xl sb-mx-auto sb-px-6 sb-py-8">
         {/* Author Info */}
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center flex-shrink-0">
-            <span className="text-gray-600 font-medium text-lg">
+        <div className="sb-flex sb-items-center sb-gap-3 sb-mb-6">
+          <div className="sb-w-12 sb-h-12 sb-bg-gray-300 sb-rounded-full sb-flex sb-items-center sb-justify-center sb-flex-shrink-0">
+            <span className="sb-text-gray-600 sb-font-medium sb-text-lg">
               {post.user_name?.charAt(0)?.toUpperCase() || '?'}
             </span>
           </div>
-          <div className="flex flex-col">
-            <div className="flex items-center gap-2">
-              <span className="font-semibold text-gray-900">{post.user_name || 'Anonymous'}</span>
-              <span className="text-sm text-gray-400">·</span>
-              <span className="text-sm text-gray-500">{post.date}</span>
+          <div className="sb-flex sb-flex-col">
+            <div className="sb-flex sb-items-center sb-gap-2">
+              <span className="sb-font-semibold sb-text-gray-900">{post.user_name || 'Anonymous'}</span>
+              <span className="sb-text-sm sb-text-gray-400">·</span>
+              <span className="sb-text-sm sb-text-gray-500">{post.date}</span>
             </div>
-            <p className="text-sm text-gray-500 font-normal">{post.user_deptname || ''}</p>
+            <p className="sb-text-sm sb-text-gray-500 sb-font-normal">{post.user_deptname || ''}</p>
           </div>
         </div>
 
         {/* Title */}
-        <h1 className="text-2xl font-bold text-gray-900 mb-6">
+        <h1 className="sb-text-2xl sb-font-bold sb-text-gray-900 sb-mb-6">
           {post.title}
         </h1>
 
         {/* Body */}
-        <div className="prose prose-gray max-w-none">
-          <p className="text-gray-700 leading-relaxed mb-6">
+        <div className="sb-prose sb-prose-gray sb-max-w-none">
+          <p className="sb-text-gray-700 sb-leading-relaxed sb-mb-6">
             {post.content}
           </p>
-          <p className="text-gray-700 leading-relaxed mb-6">
+          <p className="sb-text-gray-700 sb-leading-relaxed sb-mb-6">
             And the big one: <strong>Native Events</strong> is about to land. End-to-end creation, view-vs-attendance insights, post embeds, hybrid (in-person & virtual) support, and recurring RSVPs.
           </p>
         </div>
 
         {/* Comments Section */}
-        <div className="mt-10 pb-24">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-semibold text-gray-900">Comments ({post.comments?.length || 0})</h2>
-            <span className="text-sm text-gray-500">Sort by newest first</span>
+        <div className="sb-mt-10 sb-pb-24">
+          <div className="sb-flex sb-items-center sb-justify-between sb-mb-6">
+            <h2 className="sb-text-lg sb-font-semibold sb-text-gray-900">Comments ({post.comments?.length || 0})</h2>
+            <span className="sb-text-sm sb-text-gray-500">Sort by newest first</span>
           </div>
 
-          <div className="space-y-6">
+          <div className="sb-space-y-6">
             {post.comments && post.comments.length > 0 ? (
               post.comments.map((comment) => (
-                <div key={comment.id} className="flex gap-3">
+                <div key={comment.id} className="sb-flex sb-gap-3">
                   {/* Avatar */}
-                  <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center flex-shrink-0">
-                    <span className="text-gray-600 font-medium text-sm">
+                  <div className="sb-w-10 sb-h-10 sb-bg-gray-300 sb-rounded-full sb-flex sb-items-center sb-justify-center sb-flex-shrink-0">
+                    <span className="sb-text-gray-600 sb-font-medium sb-text-sm">
                       {comment.user_name?.charAt(0)?.toUpperCase() || '?'}
                     </span>
                   </div>
 
                   {/* Comment Content */}
-                  <div className="flex-1">
-                    <div className="flex items-start justify-between">
-                      <div className="flex flex-col">
-                        <div className="flex items-center gap-2">
-                          <span className="font-semibold text-gray-900">{comment.user_name || 'Anonymous'}</span>
-                          <span className="text-sm text-gray-400">·</span>
-                          <span className="text-sm text-gray-500">{formatDate(comment.created_at)}</span>
+                  <div className="sb-flex-1">
+                    <div className="sb-flex sb-items-start sb-justify-between">
+                      <div className="sb-flex sb-flex-col">
+                        <div className="sb-flex sb-items-center sb-gap-2">
+                          <span className="sb-font-semibold sb-text-gray-900">{comment.user_name || 'Anonymous'}</span>
+                          <span className="sb-text-sm sb-text-gray-400">·</span>
+                          <span className="sb-text-sm sb-text-gray-500">{formatDate(comment.created_at)}</span>
                         </div>
-                        <p className="text-xs text-gray-500 font-normal">{comment.user_deptname || ''}</p>
+                        <p className="sb-text-xs sb-text-gray-500 sb-font-normal">{comment.user_deptname || ''}</p>
                       </div>
-                      <button className="p-1 hover:bg-gray-100 rounded transition-colors">
-                        <MoreHorizontal size={16} className="text-gray-400" />
+                      <button className="sb-p-1 hover:sb-bg-gray-100 sb-rounded sb-transition-colors">
+                        <MoreHorizontal size={16} className="sb-text-gray-400" />
                       </button>
                     </div>
 
-                    <div className="mt-2 text-gray-700 whitespace-pre-line leading-relaxed">
+                    <div className="sb-mt-2 sb-text-gray-700 sb-whitespace-pre-line sb-leading-relaxed">
                       {comment.content}
                     </div>
                   </div>
                 </div>
               ))
             ) : (
-              <p className="text-gray-500 text-center py-8">아직 댓글이 없습니다.</p>
+              <p className="sb-text-gray-500 sb-text-center sb-py-8">아직 댓글이 없습니다.</p>
             )}
           </div>
         </div>
       </div>
 
       {/* Comment Input */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-6 py-4">
-        <div className="max-w-4xl mx-auto flex items-center gap-3">
-          <div className="w-10 h-10 bg-emerald-500 rounded-full flex items-center justify-center">
-            <span className="text-white font-semibold">G</span>
+      <div className="sb-fixed sb-bottom-0 sb-left-0 sb-right-0 sb-bg-white sb-border-t sb-border-gray-200 sb-px-6 sb-py-4">
+        <div className="sb-max-w-4xl sb-mx-auto sb-flex sb-items-center sb-gap-3">
+          <div className="sb-w-10 sb-h-10 sb-bg-emerald-500 sb-rounded-full sb-flex sb-items-center sb-justify-center">
+            <span className="sb-text-white sb-font-semibold">G</span>
           </div>
           <input
             type="text"
             placeholder="What are your thoughts?"
-            className="flex-1 bg-gray-100 rounded-full px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            className="sb-flex-1 sb-bg-gray-100 sb-rounded-full sb-px-4 sb-py-3 sb-text-sm focus:sb-outline-none focus:sb-ring-2 focus:sb-ring-emerald-500"
           />
         </div>
       </div>
@@ -374,7 +374,9 @@ const BoardList = () => {
         url += `?${params.toString()}`;
       }
 
-      const response = await fetch(url);
+      const response = await fetch(url, {
+        credentials: 'include',
+      });
       const data = await response.json();
 
       // API 응답을 프론트엔드 형식으로 변환
@@ -425,6 +427,12 @@ const BoardList = () => {
     { value: 'tag', label: '태그' },
   ];
 
+  // CSRF 토큰 가져오기
+  const getCsrfToken = () => {
+    return document.cookie.split('; ')
+      .find(row => row.startsWith('csrftoken='))?.split('=')[1];
+  };
+
   // 새 게시글 작성 핸들러
   const handleCreatePost = async (newPost) => {
     try {
@@ -432,7 +440,9 @@ const BoardList = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'X-CSRFToken': getCsrfToken(),
         },
+        credentials: 'include',
         body: JSON.stringify({
           title: newPost.title,
           content: newPost.content,
@@ -475,7 +485,9 @@ const BoardList = () => {
   // 상세페이지로 이동 (상세 API 호출하여 댓글 포함 데이터 가져오기)
   const handlePostClick = async (post) => {
     try {
-      const response = await fetch(`${API_BASE}/posts/${post.id}/`);
+      const response = await fetch(`${API_BASE}/posts/${post.id}/`, {
+        credentials: 'include',
+      });
       const data = await response.json();
 
       if (data.access_denied) {
@@ -505,26 +517,26 @@ const BoardList = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900 p-8 flex flex-col font-sans">
-      
-      <div className="max-w-7xl mx-auto w-full">
+    <div className="sb-min-h-screen sb-bg-gray-50 sb-text-gray-900 sb-p-8 sb-flex sb-flex-col sb-font-sans">
+
+      <div className="sb-max-w-7xl sb-mx-auto sb-w-full">
         {/* Header Section */}
-        <h1 className="text-2xl font-bold mb-6 text-gray-900">What's new</h1>
-        
+        <h1 className="sb-text-2xl sb-font-bold sb-mb-6 sb-text-gray-900">What's new</h1>
+
         {/* Search Bar */}
-        <div className="flex items-center gap-3 mb-6">
+        <div className="sb-flex sb-items-center sb-gap-3 sb-mb-6">
           {/* Filter Dropdown */}
-          <div className="relative">
+          <div className="sb-relative">
             <button
               onClick={() => setShowFilterDropdown(!showFilterDropdown)}
-              className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+              className="sb-flex sb-items-center sb-gap-2 sb-px-4 sb-py-2.5 sb-bg-white sb-border sb-border-gray-200 sb-rounded-lg sb-text-sm sb-font-medium sb-text-gray-700 hover:sb-bg-gray-50 sb-transition-colors"
             >
               <Filter size={16} />
               {filterOptions.find(opt => opt.value === filterType)?.label}
               <ChevronDown size={16} />
             </button>
             {showFilterDropdown && (
-              <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 min-w-[120px]">
+              <div className="sb-absolute sb-top-full sb-left-0 sb-mt-1 sb-bg-white sb-border sb-border-gray-200 sb-rounded-lg sb-shadow-lg sb-z-10 sb-min-w-[120px]">
                 {filterOptions.map(option => (
                   <button
                     key={option.value}
@@ -533,8 +545,8 @@ const BoardList = () => {
                       setShowFilterDropdown(false);
                       setCurrentPage(1);
                     }}
-                    className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 first:rounded-t-lg last:rounded-b-lg ${
-                      filterType === option.value ? 'bg-emerald-50 text-emerald-600' : 'text-gray-700'
+                    className={`sb-w-full sb-text-left sb-px-4 sb-py-2 sb-text-sm hover:sb-bg-gray-50 first:sb-rounded-t-lg last:sb-rounded-b-lg ${
+                      filterType === option.value ? 'sb-bg-emerald-50 sb-text-emerald-600' : 'sb-text-gray-700'
                     }`}
                   >
                     {option.label}
@@ -545,19 +557,19 @@ const BoardList = () => {
           </div>
 
           {/* Search Input */}
-          <div className="relative flex-1 max-w-md">
-            <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <div className="sb-relative sb-flex-1 sb-max-w-md">
+            <Search size={18} className="sb-absolute sb-left-3 sb-top-1/2 -sb-translate-y-1/2 sb-text-gray-400" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => handleSearch(e.target.value)}
               placeholder="검색어를 입력하세요..."
-              className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+              className="sb-w-full sb-pl-10 sb-pr-4 sb-py-2.5 sb-bg-white sb-border sb-border-gray-200 sb-rounded-lg sb-text-sm focus:sb-outline-none focus:sb-ring-2 focus:sb-ring-emerald-500 focus:sb-border-transparent"
             />
             {searchQuery && (
               <button
                 onClick={() => handleSearch('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                className="sb-absolute sb-right-3 sb-top-1/2 -sb-translate-y-1/2 sb-text-gray-400 hover:sb-text-gray-600"
               >
                 <X size={16} />
               </button>
@@ -566,25 +578,25 @@ const BoardList = () => {
 
           {/* Results Count */}
           {searchQuery && (
-            <span className="text-sm text-gray-500">
+            <span className="sb-text-sm sb-text-gray-500">
               {posts.length}개 결과
             </span>
           )}
         </div>
 
-        <div className="flex justify-between items-center mb-8">
-          <div className="flex gap-4 items-center">
-            <button className="bg-gray-900 hover:bg-gray-800 text-white px-5 py-2 rounded-full text-sm font-medium transition-colors">
+        <div className="sb-flex sb-justify-between sb-items-center sb-mb-8">
+          <div className="sb-flex sb-gap-4 sb-items-center">
+            <button className="sb-bg-gray-900 hover:sb-bg-gray-800 sb-text-white sb-px-5 sb-py-2 sb-rounded-full sb-text-sm sb-font-medium sb-transition-colors">
               Product
             </button>
-            <button className="text-gray-500 hover:text-gray-900 px-2 text-sm font-medium transition-colors">
+            <button className="sb-text-gray-500 hover:sb-text-gray-900 sb-px-2 sb-text-sm sb-font-medium sb-transition-colors">
               Events
             </button>
           </div>
 
           <button
             onClick={() => setIsCreating(true)}
-            className="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+            className="sb-flex sb-items-center sb-gap-2 sb-bg-emerald-500 hover:sb-bg-emerald-600 sb-text-white sb-px-4 sb-py-2 sb-rounded-lg sb-text-sm sb-font-medium sb-transition-colors"
           >
             <Plus size={18} />
             글쓰기
@@ -593,44 +605,44 @@ const BoardList = () => {
 
         {/* Grid Container */}
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-20 text-gray-500">
-            <div className="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-            <p className="text-sm">로딩 중...</p>
+          <div className="sb-flex sb-flex-col sb-items-center sb-justify-center sb-py-20 sb-text-gray-500">
+            <div className="sb-w-8 sb-h-8 sb-border-4 sb-border-emerald-500 sb-border-t-transparent sb-rounded-full sb-animate-spin sb-mb-4"></div>
+            <p className="sb-text-sm">로딩 중...</p>
           </div>
         ) : posts.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-gray-500">
-            <Search size={48} className="mb-4 text-gray-300" />
-            <p className="text-lg font-medium">{searchQuery ? '검색 결과가 없습니다' : '게시글이 없습니다'}</p>
-            <p className="text-sm mt-1">{searchQuery ? '다른 검색어를 입력해보세요' : '첫 게시글을 작성해보세요!'}</p>
+          <div className="sb-flex sb-flex-col sb-items-center sb-justify-center sb-py-20 sb-text-gray-500">
+            <Search size={48} className="sb-mb-4 sb-text-gray-300" />
+            <p className="sb-text-lg sb-font-medium">{searchQuery ? '검색 결과가 없습니다' : '게시글이 없습니다'}</p>
+            <p className="sb-text-sm sb-mt-1">{searchQuery ? '다른 검색어를 입력해보세요' : '첫 게시글을 작성해보세요!'}</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
+          <div className="sb-grid sb-grid-cols-1 md:sb-grid-cols-2 lg:sb-grid-cols-3 sb-gap-6 sb-mb-10">
             {currentPosts.map((post) => (
               <div
                 key={post.id}
                 onClick={() => handlePostClick(post)}
-                className="bg-white rounded-xl p-6 border border-gray-100 hover:border-gray-300 transition-all flex flex-col h-[320px] shadow-md shadow-gray-200 hover:shadow-lg hover:shadow-gray-300 cursor-pointer"
+                className="sb-bg-white sb-rounded-xl sb-p-6 sb-border sb-border-gray-100 hover:sb-border-gray-300 sb-transition-all sb-flex sb-flex-col sb-h-[320px] sb-shadow-md sb-shadow-gray-200 hover:sb-shadow-lg hover:sb-shadow-gray-300 sb-cursor-pointer"
               >
                 {/* Author Info */}
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center flex-shrink-0">
-                    <span className="text-gray-600 font-medium text-sm">
+                <div className="sb-flex sb-items-center sb-gap-3 sb-mb-4">
+                  <div className="sb-w-10 sb-h-10 sb-bg-gray-300 sb-rounded-full sb-flex sb-items-center sb-justify-center sb-flex-shrink-0">
+                    <span className="sb-text-gray-600 sb-font-medium sb-text-sm">
                       {post.user_name?.charAt(0)?.toUpperCase() || '?'}
                     </span>
                   </div>
-                  <div className="flex flex-col">
-                    <span className="text-sm font-semibold text-gray-900">{post.user_name || 'Anonymous'}</span>
-                    <span className="text-xs text-gray-500 font-normal">{post.user_deptname || ''}</span>
+                  <div className="sb-flex sb-flex-col">
+                    <span className="sb-text-sm sb-font-semibold sb-text-gray-900">{post.user_name || 'Anonymous'}</span>
+                    <span className="sb-text-xs sb-text-gray-500 sb-font-normal">{post.user_deptname || ''}</span>
                   </div>
                 </div>
 
                 {/* Tags */}
                 {post.tags && post.tags.length > 0 && (
-                  <div className="flex flex-wrap gap-1 mb-3">
+                  <div className="sb-flex sb-flex-wrap sb-gap-1 sb-mb-3">
                     {post.tags.slice(0, 3).map((tag, idx) => (
                       <span
                         key={idx}
-                        className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full"
+                        className="sb-px-2 sb-py-0.5 sb-bg-gray-100 sb-text-gray-600 sb-text-xs sb-rounded-full"
                       >
                         {tag}
                       </span>
@@ -639,21 +651,21 @@ const BoardList = () => {
                 )}
 
                 {/* Content */}
-                <h3 className="text-lg font-bold text-gray-900 mb-3 leading-snug truncate flex items-center gap-2">
-                  {post.is_private && <Lock size={16} className="text-gray-400 flex-shrink-0" />}
+                <h3 className="sb-text-lg sb-font-bold sb-text-gray-900 sb-mb-3 sb-leading-snug sb-truncate sb-flex sb-items-center sb-gap-2">
+                  {post.is_private && <Lock size={16} className="sb-text-gray-400 sb-flex-shrink-0" />}
                   {post.title}
                 </h3>
-                <p className="text-gray-600 text-sm leading-relaxed mb-6 line-clamp-3 flex-grow">
+                <p className="sb-text-gray-600 sb-text-sm sb-leading-relaxed sb-mb-6 sb-line-clamp-3 sb-flex-grow">
                   {post.content}
                 </p>
 
                 {/* Footer */}
-                <div className="mt-auto flex items-center justify-between pt-4 border-t border-gray-100">
-                  <span className="text-xs text-gray-500 font-medium">Read update</span>
+                <div className="sb-mt-auto sb-flex sb-items-center sb-justify-between sb-pt-4 sb-border-t sb-border-gray-100">
+                  <span className="sb-text-xs sb-text-gray-500 sb-font-medium">Read update</span>
 
-                  <div className="flex items-center gap-2 text-gray-500 hover:text-gray-900 transition-colors cursor-pointer">
+                  <div className="sb-flex sb-items-center sb-gap-2 sb-text-gray-500 hover:sb-text-gray-900 sb-transition-colors sb-cursor-pointer">
                     <MessageSquare size={16} />
-                    <span className="text-xs font-medium">{post.comments}</span>
+                    <span className="sb-text-xs sb-font-medium">{post.comments}</span>
                   </div>
                 </div>
               </div>
@@ -663,11 +675,11 @@ const BoardList = () => {
 
         {/* Pagination Controls */}
         {totalPages > 1 && (
-          <div className="flex justify-center items-center gap-2 mt-auto">
-            <button 
+          <div className="sb-flex sb-justify-center sb-items-center sb-gap-2 sb-mt-auto">
+            <button
               onClick={() => handlePageChange(currentPage - 1)}
               disabled={currentPage === 1}
-              className={`p-2 rounded-lg ${currentPage === 1 ? 'text-gray-300 cursor-not-allowed' : 'text-gray-600 hover:bg-gray-200'}`}
+              className={`sb-p-2 sb-rounded-lg ${currentPage === 1 ? 'sb-text-gray-300 sb-cursor-not-allowed' : 'sb-text-gray-600 hover:sb-bg-gray-200'}`}
             >
               <ChevronLeft size={20} />
             </button>
@@ -676,20 +688,20 @@ const BoardList = () => {
               <button
                 key={number}
                 onClick={() => handlePageChange(number)}
-                className={`w-8 h-8 rounded-lg text-sm font-medium transition-all ${
+                className={`sb-w-8 sb-h-8 sb-rounded-lg sb-text-sm sb-font-medium sb-transition-all ${
                   currentPage === number
-                    ? 'bg-gray-900 text-white'
-                    : 'text-gray-600 hover:bg-gray-200 hover:text-gray-900'
+                    ? 'sb-bg-gray-900 sb-text-white'
+                    : 'sb-text-gray-600 hover:sb-bg-gray-200 hover:sb-text-gray-900'
                 }`}
               >
                 {number}
               </button>
             ))}
 
-            <button 
+            <button
               onClick={() => handlePageChange(currentPage + 1)}
               disabled={currentPage === totalPages}
-              className={`p-2 rounded-lg ${currentPage === totalPages ? 'text-gray-300 cursor-not-allowed' : 'text-gray-600 hover:bg-gray-200'}`}
+              className={`sb-p-2 sb-rounded-lg ${currentPage === totalPages ? 'sb-text-gray-300 sb-cursor-not-allowed' : 'sb-text-gray-600 hover:sb-bg-gray-200'}`}
             >
               <ChevronRight size={20} />
             </button>
@@ -703,11 +715,14 @@ const BoardList = () => {
 export default BoardList;
 export { PostCreate, PostDetail };
 
-// 화면에 렌더링 (테스트 환경에서는 실행하지 않음)
-if (typeof document !== 'undefined' && document.getElementById('root')) {
-  ReactDOM.createRoot(document.getElementById('root')).render(
-    <React.StrictMode>
-      <BoardList />
-    </React.StrictMode>
-  );
+// 독립 SPA 렌더링 (일반적인 React 앱처럼 동작)
+if (typeof document !== 'undefined') {
+  const rootElement = document.getElementById('root');
+  if (rootElement) {
+    ReactDOM.createRoot(rootElement).render(
+      <React.StrictMode>
+        <BoardList />
+      </React.StrictMode>
+    );
+  }
 }

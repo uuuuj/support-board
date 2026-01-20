@@ -1,20 +1,4 @@
-# Stage 1: Build React frontend
-FROM node:22-alpine AS frontend-builder
-
-WORKDIR /app
-
-# Install dependencies
-COPY package.json package-lock.json ./
-RUN npm ci
-
-# Copy source and build
-COPY src/ ./src/
-COPY index.html vite.config.js postcss.config.js tailwind.config.js eslint.config.js ./
-COPY public/ ./public/
-
-RUN npm run build
-
-# Stage 2: Python/Django production
+# Django API Server Dockerfile
 FROM python:3.13-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1
@@ -44,13 +28,10 @@ COPY support_board/ ./support_board/
 COPY manage.py ./
 COPY entrypoint.sh ./
 
-# Copy built frontend from Stage 1
-COPY --from=frontend-builder /app/support_board/static/support_board ./support_board/static/support_board
-
 # Make entrypoint executable
 RUN chmod +x entrypoint.sh
 
-EXPOSE 8000
+EXPOSE 7000
 
 ENTRYPOINT ["./entrypoint.sh"]
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "config.wsgi:application"]
+CMD ["gunicorn", "--bind", "0.0.0.0:7000", "config.wsgi:application"]

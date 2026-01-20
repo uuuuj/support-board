@@ -5,7 +5,7 @@
  * 이 모듈은 세션 정보를 읽어오는 역할만 합니다.
  */
 
-const API_BASE = '/support/api';
+const API_BASE = import.meta.env.VITE_API_BASE || '/support/api';
 const POLLING_INTERVAL = 10 * 60 * 1000; // 10분
 
 /**

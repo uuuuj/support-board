@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { PostCreate } from '../main';
 
 // userSync mock
@@ -29,24 +29,8 @@ describe('PostCreate 컴포넌트', () => {
       />
     );
 
-    expect(screen.getByPlaceholderText('이름을 입력하세요')).toBeInTheDocument();
     expect(screen.getByPlaceholderText('제목을 입력하세요')).toBeInTheDocument();
     expect(screen.getByText('Create a new question')).toBeInTheDocument();
-  });
-
-  it('로그인한 유저의 username이 작성자 필드에 자동 입력된다', () => {
-    const currentUser = { uuid: 'test-uuid', username: '테스트유저', is_admin: false };
-
-    render(
-      <PostCreate
-        onBack={mockOnBack}
-        onSubmit={mockOnSubmit}
-        currentUser={currentUser}
-      />
-    );
-
-    const authorInput = screen.getByPlaceholderText('이름을 입력하세요');
-    expect(authorInput.value).toBe('테스트유저');
   });
 
   it('미로그인 시 비밀글 토글이 비활성화된다', () => {
@@ -107,7 +91,7 @@ describe('PostCreate 컴포넌트', () => {
     const submitButton = screen.getByText('Publish');
     fireEvent.click(submitButton);
 
-    expect(alertMock).toHaveBeenCalledWith('작성자, 제목, 내용을 모두 입력해주세요.');
+    expect(alertMock).toHaveBeenCalledWith('제목과 내용을 모두 입력해주세요.');
     expect(mockOnSubmit).not.toHaveBeenCalled();
 
     alertMock.mockRestore();
@@ -122,11 +106,9 @@ describe('PostCreate 컴포넌트', () => {
       />
     );
 
-    const authorInput = screen.getByPlaceholderText('이름을 입력하세요');
     const titleInput = screen.getByPlaceholderText('제목을 입력하세요');
     const contentInput = screen.getByPlaceholderText('What are your thoughts?');
 
-    fireEvent.change(authorInput, { target: { value: '작성자' } });
     fireEvent.change(titleInput, { target: { value: '테스트 제목' } });
     fireEvent.change(contentInput, { target: { value: '테스트 내용' } });
 
@@ -137,33 +119,8 @@ describe('PostCreate 컴포넌트', () => {
       expect.objectContaining({
         title: '테스트 제목',
         content: '테스트 내용',
-        author: '작성자',
       })
     );
-  });
-
-  it('미로그인 상태에서 비밀글 선택 시 alert가 표시된다', () => {
-    const alertMock = vi.spyOn(window, 'alert').mockImplementation(() => {});
-
-    // 비밀글 상태를 강제로 true로 설정하기 어려우므로,
-    // 실제로는 토글이 비활성화되어 있어 선택 불가
-    // 이 테스트는 handleSubmit의 검증 로직을 테스트
-
-    render(
-      <PostCreate
-        onBack={mockOnBack}
-        onSubmit={mockOnSubmit}
-        currentUser={null}
-      />
-    );
-
-    // 비밀글 토글 버튼이 disabled 상태인지 확인
-    const buttons = screen.getAllByRole('button');
-    const privateToggle = buttons.find(btn => btn.disabled);
-
-    expect(privateToggle).toBeDefined();
-
-    alertMock.mockRestore();
   });
 
   it('로그인 상태에서 비밀글 선택 후 제출 시 is_private이 true로 전송된다', async () => {

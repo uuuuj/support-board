@@ -327,3 +327,7 @@ sketch
 
 # Security reports
 security_reports/
+
+# Frontend
+frontend/node_modules/
+frontend/dist/

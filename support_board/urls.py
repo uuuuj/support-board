@@ -5,9 +5,6 @@ from . import views
 app_name = 'support_board'
 
 urlpatterns = [
-    # 프론트엔드
-    path('', views.index, name='index'),
-
     # API - Posts
     path('api/posts/', views.api_posts_list, name='api_posts_list'),
     path('api/posts/create/', views.api_posts_create, name='api_posts_create'),

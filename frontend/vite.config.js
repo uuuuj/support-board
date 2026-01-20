@@ -4,13 +4,18 @@ import react from '@vitejs/plugin-react'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
-  base: '/static/support_board/',
+  base: '/',
   build: {
-    outDir: 'support_board/static/support_board',
+    outDir: 'dist',
     emptyDirBeforeWrite: true,
-    manifest: true,
-    rollupOptions: {
-      input: 'src/main.jsx',
+  },
+  server: {
+    port: 5173,
+    proxy: {
+      '/support/api': {
+        target: 'http://localhost:7000',
+        changeOrigin: true,
+      },
     },
   },
 })
