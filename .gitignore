@@ -331,3 +331,6 @@ security_reports/
 # Frontend
 frontend/node_modules/
 frontend/dist/
+
+# Docker
+*.tar

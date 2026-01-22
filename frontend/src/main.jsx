@@ -496,7 +496,7 @@ const BoardList = () => {
 
       <div className="sb-max-w-7xl sb-mx-auto sb-w-full">
         {/* Header Section */}
-        <h1 className="sb-text-2xl sb-font-bold sb-mb-6 sb-text-gray-900">What's new</h1>
+        <h1 className="sb-text-2xl sb-font-bold sb-mb-6 sb-text-gray-900">문의하기</h1>
 
         {/* Search Bar */}
         <div className="sb-flex sb-items-center sb-gap-3 sb-mb-6">
