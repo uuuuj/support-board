@@ -4,7 +4,7 @@ import react from '@vitejs/plugin-react'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
-  base: '/board/',
+  base: '/embed8510/',
   build: {
     outDir: 'dist',
     emptyDirBeforeWrite: true,

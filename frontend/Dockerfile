@@ -1,4 +1,4 @@
-# Frontend Build Only (Nginx 없음)
+# Stage 1: Build
 FROM node:22-alpine AS builder
 
 WORKDIR /app
@@ -9,7 +9,16 @@ RUN npm ci
 COPY . .
 RUN npm run build
 
-# 빌드 결과물만 출력 (dist 폴더)
-FROM alpine:latest
-COPY --from=builder /app/dist /dist
-CMD ["echo", "Frontend build complete. Copy /dist to your web server."]
+# Stage 2: Nginx
+FROM nginx:alpine
+
+# 기본 설정 제거 후 커스텀 설정 복사
+RUN rm /etc/nginx/conf.d/default.conf
+COPY nginx.conf /etc/nginx/conf.d/
+
+# 빌드된 정적 파일 복사
+COPY --from=builder /app/dist /usr/share/nginx/html
+
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]
