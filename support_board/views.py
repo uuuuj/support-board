@@ -213,7 +213,7 @@ def api_posts_create(request: HttpRequest) -> Response:
         post = Post.objects.create(
             title=validated_data.get('title', ''),
             content=validated_data.get('content', ''),
-            user_name=validated_data.get('user_name', 'Anonymous'),
+            user_name=current_user.get('user_name') if current_user else validated_data.get('user_name', 'Anonymous'),
             user_id=current_user.get('user_id') if current_user else None,
             user_compname=current_user.get('user_compname') if current_user else None,
             user_deptname=current_user.get('user_deptname') if current_user else None,
@@ -306,8 +306,6 @@ def api_post_update(request: HttpRequest, post_id: int) -> Response:
             post.title = validated_data['title']
         if 'content' in validated_data and validated_data['content']:
             post.content = validated_data['content']
-        if 'user_name' in validated_data and validated_data['user_name']:
-            post.user_name = validated_data['user_name']
         if 'is_resolved' in validated_data:
             post.is_resolved = validated_data['is_resolved']
         if 'is_private' in validated_data:
@@ -402,10 +400,26 @@ def api_post_comments(request: HttpRequest, post_id: int) -> Response:
         ValidationService.validate_json_size(request.body)
         validated_data = ValidationService.validate_comment_data(request.data)
 
+        # 대댓글인 경우 부모 댓글 확인
+        parent = None
+        parent_id = validated_data.get('parent_id')
+        if parent_id:
+            parent = Comment.objects.filter(id=parent_id, post=post).first()
+            if not parent:
+                return Response({
+                    'access_denied': True,
+                    'message': '부모 댓글을 찾을 수 없습니다.',
+                })
+            # 대댓글의 대댓글은 허용하지 않음 (1단계만)
+            if parent.parent is not None:
+                # 대댓글에 답글 달면 같은 원댓글 아래로 평탄화
+                parent = parent.parent
+
         comment = Comment.objects.create(
             post=post,
+            parent=parent,
             content=validated_data['content'],
-            user_name=validated_data.get('user_name', 'Anonymous'),
+            user_name=current_user.get('user_name') if current_user else validated_data.get('user_name', 'Anonymous'),
             user_id=current_user.get('user_id') if current_user else None,
             user_compname=current_user.get('user_compname') if current_user else None,
             user_deptname=current_user.get('user_deptname') if current_user else None,
@@ -426,6 +440,105 @@ def api_post_comments(request: HttpRequest, post_id: int) -> Response:
             'access_denied': True,
             'message': '요청을 처리하는 중 오류가 발생했습니다.',
         })
+
+
+@extend_schema(
+    summary='댓글 수정',
+    description='댓글을 수정합니다. 작성자 또는 관리자만 수정 가능합니다.',
+    responses={
+        200: CommentSerializer,
+        403: ErrorSerializer,
+        404: ErrorSerializer,
+    },
+    tags=['Comments'],
+)
+@api_view(['PUT'])
+def api_comment_update(request: HttpRequest, comment_id: int) -> Response:
+    """댓글 수정 API."""
+    comment = get_object_or_404(Comment, id=comment_id)
+    current_user = get_current_user(request)
+
+    user_id = current_user.get('user_id') if current_user else None
+    is_admin = current_user.get('is_admin', False) if current_user else False
+
+    # 권한 확인: 작성자 본인 또는 관리자
+    if not (is_admin or comment.user_id == user_id):
+        return Response({
+            'access_denied': True,
+            'message': '이 댓글을 수정할 권한이 없습니다.',
+        })
+
+    # 이미 삭제된 댓글은 수정 불가
+    if comment.is_deleted:
+        return Response({
+            'access_denied': True,
+            'message': '삭제된 댓글은 수정할 수 없습니다.',
+        })
+
+    try:
+        ValidationService.validate_json_size(request.body)
+        content = request.data.get('content', '').strip()
+
+        if not content:
+            return Response({
+                'access_denied': True,
+                'message': '댓글 내용을 입력해주세요.',
+            })
+
+        comment.content = content
+        comment.save()
+
+        serializer = CommentSerializer(comment)
+        return Response(serializer.data)
+
+    except Exception as e:
+        logger.error(f"댓글 수정 중 오류 발생: {e}")
+        return Response({
+            'access_denied': True,
+            'message': '요청을 처리하는 중 오류가 발생했습니다.',
+        })
+
+
+@extend_schema(
+    summary='댓글 삭제',
+    description='댓글을 삭제합니다 (소프트 삭제). 작성자 또는 관리자만 삭제 가능합니다.',
+    responses={
+        200: CommentSerializer,
+        403: ErrorSerializer,
+        404: ErrorSerializer,
+    },
+    tags=['Comments'],
+)
+@api_view(['DELETE'])
+def api_comment_delete(request: HttpRequest, comment_id: int) -> Response:
+    """댓글 삭제 API (소프트 삭제)."""
+    comment = get_object_or_404(Comment, id=comment_id)
+    current_user = get_current_user(request)
+
+    user_id = current_user.get('user_id') if current_user else None
+    is_admin = current_user.get('is_admin', False) if current_user else False
+
+    # 권한 확인: 작성자 본인 또는 관리자
+    if not (is_admin or comment.user_id == user_id):
+        return Response({
+            'access_denied': True,
+            'message': '이 댓글을 삭제할 권한이 없습니다.',
+        })
+
+    # 이미 삭제된 댓글
+    if comment.is_deleted:
+        return Response({
+            'access_denied': True,
+            'message': '이미 삭제된 댓글입니다.',
+        })
+
+    # 소프트 삭제
+    comment.is_deleted = True
+    comment.content = ''  # 내용 삭제
+    comment.save()
+
+    serializer = CommentSerializer(comment)
+    return Response(serializer.data)
 
 
 # ============ 태그 API ============

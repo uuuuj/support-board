@@ -16,16 +16,49 @@ class TagSerializer(serializers.ModelSerializer):
         fields = ['id', 'name']
 
 
-class CommentSerializer(serializers.ModelSerializer):
-    """댓글 직렬화."""
+class ReplySerializer(serializers.ModelSerializer):
+    """대댓글 직렬화."""
+
+    is_edited = serializers.SerializerMethodField()
 
     class Meta:
         model = Comment
         fields = [
-            'id', 'content', 'user_name', 'user_id',
-            'user_compname', 'user_deptname', 'created_at', 'updated_at'
+            'id', 'parent_id', 'content', 'user_name', 'user_id',
+            'user_compname', 'user_deptname', 'is_deleted', 'is_edited',
+            'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
+
+    def get_is_edited(self, obj):
+        """수정 여부 확인 (생성 후 1초 이상 지나서 수정된 경우)."""
+        if obj.is_deleted:
+            return False
+        time_diff = (obj.updated_at - obj.created_at).total_seconds()
+        return time_diff > 1
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    """댓글 직렬화 (대댓글 포함)."""
+
+    replies = ReplySerializer(many=True, read_only=True)
+    is_edited = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Comment
+        fields = [
+            'id', 'parent_id', 'content', 'user_name', 'user_id',
+            'user_compname', 'user_deptname', 'is_deleted', 'is_edited',
+            'created_at', 'updated_at', 'replies'
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at']
+
+    def get_is_edited(self, obj):
+        """수정 여부 확인 (생성 후 1초 이상 지나서 수정된 경우)."""
+        if obj.is_deleted:
+            return False
+        time_diff = (obj.updated_at - obj.created_at).total_seconds()
+        return time_diff > 1
 
 
 class CommentCreateSerializer(serializers.Serializer):
@@ -40,6 +73,12 @@ class CommentCreateSerializer(serializers.Serializer):
         required=False,
         default='Anonymous',
         help_text='작성자 (기본값: Anonymous)'
+    )
+    parent_id = serializers.IntegerField(
+        required=False,
+        allow_null=True,
+        default=None,
+        help_text='부모 댓글 ID (대댓글인 경우)'
     )
 
 
@@ -63,7 +102,7 @@ class PostDetailSerializer(serializers.ModelSerializer):
     """게시글 상세 직렬화 (댓글 포함)."""
 
     tags = serializers.StringRelatedField(many=True, read_only=True)
-    comments = CommentSerializer(many=True, read_only=True)
+    comments = serializers.SerializerMethodField()
     comments_count = serializers.IntegerField(source='comments.count', read_only=True)
 
     class Meta:
@@ -74,6 +113,11 @@ class PostDetailSerializer(serializers.ModelSerializer):
             'tags', 'is_resolved', 'is_private', 'comments_count',
             'comments', 'created_at', 'updated_at'
         ]
+
+    def get_comments(self, obj):
+        """원댓글만 반환 (대댓글은 replies로 포함)."""
+        parent_comments = obj.comments.filter(parent__isnull=True)
+        return CommentSerializer(parent_comments, many=True).data
 
 
 class PostCreateSerializer(serializers.Serializer):

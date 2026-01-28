@@ -16,6 +16,10 @@ urlpatterns = [
     path('api/posts/<int:post_id>/delete/', views.api_post_delete, name='api_post_delete'),
     path('api/posts/<int:post_id>/comments/', views.api_post_comments, name='api_post_comments'),
 
+    # API - Comments
+    path('api/comments/<int:comment_id>/update/', views.api_comment_update, name='api_comment_update'),
+    path('api/comments/<int:comment_id>/delete/', views.api_comment_delete, name='api_comment_delete'),
+
     # API - Tags
     path('api/tags/', views.api_tags, name='api_tags'),
 

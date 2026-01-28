@@ -74,21 +74,31 @@ class Comment(models.Model):
 
     Attributes:
         post: 댓글이 달린 게시글.
+        parent: 부모 댓글 (대댓글인 경우). None이면 원댓글.
         content: 댓글 내용.
         user_name: 작성자 이름.
         user_id: 작성자 ID (외부 User 테이블 참조, FK 아님).
         user_compname: 작성자 회사명.
         user_deptname: 작성자 부서명.
+        is_deleted: 삭제 여부 (소프트 삭제).
         created_at: 생성 일시.
         updated_at: 수정 일시.
     """
 
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='comments')
+    parent = models.ForeignKey(
+        'self',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='replies'
+    )
     content = models.TextField()
     user_name = models.CharField(max_length=50)
     user_id = models.CharField(max_length=100, null=True, blank=True)
     user_compname = models.CharField(max_length=100, null=True, blank=True)
     user_deptname = models.CharField(max_length=100, null=True, blank=True)
+    is_deleted = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

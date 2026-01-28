@@ -233,7 +233,7 @@ class ValidationService:
         Raises:
             ValidationError: 데이터가 유효하지 않은 경우.
         """
-        return {
+        validated = {
             "content": cls.sanitize_string(
                 data.get("content"),
                 MAX_CONTENT_LENGTH,
@@ -246,6 +246,15 @@ class ValidationService:
                 allow_empty=True
             ) or "Anonymous",
         }
+
+        # parent_id 처리 (대댓글인 경우)
+        parent_id = data.get("parent_id")
+        if parent_id is not None:
+            if not isinstance(parent_id, int) or parent_id < 1:
+                raise ValidationError("유효하지 않은 부모 댓글 ID입니다.")
+            validated["parent_id"] = parent_id
+
+        return validated
 
     @staticmethod
     def validate_json_size(body: bytes) -> None:
