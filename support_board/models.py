@@ -80,6 +80,7 @@ class Comment(models.Model):
         user_id: 작성자 ID (외부 User 테이블 참조, FK 아님).
         user_compname: 작성자 회사명.
         user_deptname: 작성자 부서명.
+        is_admin: 작성자가 관리자인지 여부.
         is_deleted: 삭제 여부 (소프트 삭제).
         created_at: 생성 일시.
         updated_at: 수정 일시.
@@ -98,6 +99,7 @@ class Comment(models.Model):
     user_id = models.CharField(max_length=100, null=True, blank=True)
     user_compname = models.CharField(max_length=100, null=True, blank=True)
     user_deptname = models.CharField(max_length=100, null=True, blank=True)
+    is_admin = models.BooleanField(default=False)
     is_deleted = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

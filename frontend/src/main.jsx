@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
-import { MessageSquare, ChevronLeft, ChevronRight, ArrowLeft, MoreHorizontal, Plus, X, Search, Filter, ChevronDown, Lock } from 'lucide-react';
+import { MessageSquare, ChevronLeft, ChevronRight, ArrowLeft, MoreHorizontal, Plus, X, Search, Filter, ChevronDown, Lock, Crown } from 'lucide-react';
 
 // API 기본 URL (환경 변수에서 가져오거나 기본값 사용)
 const API_BASE = import.meta.env.VITE_API_BASE || '/support/api';
@@ -409,6 +409,9 @@ const PostDetail = ({ post, onBack, onCommentSubmit, onCommentUpdate, onCommentD
                             <span className="font-semibold text-gray-900">
                               {comment.is_deleted ? '알 수 없음' : (comment.user_name || 'Anonymous')}
                             </span>
+                            {!comment.is_deleted && comment.is_admin && (
+                              <Crown size={14} className="text-yellow-500" title="관리자" />
+                            )}
                             <span className="text-sm text-gray-400">·</span>
                             <span className="text-sm text-gray-500">{formatDate(comment.created_at)}</span>
                           </div>
@@ -517,6 +520,9 @@ const PostDetail = ({ post, onBack, onCommentSubmit, onCommentUpdate, onCommentD
                                   <span className="font-semibold text-gray-900 text-sm">
                                     {reply.is_deleted ? '알 수 없음' : (reply.user_name || 'Anonymous')}
                                   </span>
+                                  {!reply.is_deleted && reply.is_admin && (
+                                    <Crown size={12} className="text-yellow-500" title="관리자" />
+                                  )}
                                   <span className="text-xs text-gray-400">·</span>
                                   <span className="text-xs text-gray-500">{formatDate(reply.created_at)}</span>
                                 </div>

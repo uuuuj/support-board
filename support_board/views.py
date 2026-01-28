@@ -423,6 +423,7 @@ def api_post_comments(request: HttpRequest, post_id: int) -> Response:
             user_id=current_user.get('user_id') if current_user else None,
             user_compname=current_user.get('user_compname') if current_user else None,
             user_deptname=current_user.get('user_deptname') if current_user else None,
+            is_admin=is_admin,
         )
 
         serializer = CommentSerializer(comment)

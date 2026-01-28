@@ -25,7 +25,7 @@ class ReplySerializer(serializers.ModelSerializer):
         model = Comment
         fields = [
             'id', 'parent_id', 'content', 'user_name', 'user_id',
-            'user_compname', 'user_deptname', 'is_deleted', 'is_edited',
+            'user_compname', 'user_deptname', 'is_admin', 'is_deleted', 'is_edited',
             'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
@@ -48,7 +48,7 @@ class CommentSerializer(serializers.ModelSerializer):
         model = Comment
         fields = [
             'id', 'parent_id', 'content', 'user_name', 'user_id',
-            'user_compname', 'user_deptname', 'is_deleted', 'is_edited',
+            'user_compname', 'user_deptname', 'is_admin', 'is_deleted', 'is_edited',
             'created_at', 'updated_at', 'replies'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
