@@ -1,0 +1,9 @@
+services:
+  frontend:
+    image: support-board-frontend:dev
+    container_name: support-board-frontend-dev
+    restart: unless-stopped
+    ports:
+      - "0.0.0.0:8610:80"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

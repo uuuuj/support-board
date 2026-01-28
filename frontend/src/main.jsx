@@ -2,16 +2,31 @@ import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
 import { MessageSquare, ChevronLeft, ChevronRight, ArrowLeft, MoreHorizontal, Plus, X, Search, Filter, ChevronDown, Lock } from 'lucide-react';
-import { startUserSyncPolling, getCurrentUser } from './userSync';
 
 // API 기본 URL (환경 변수에서 가져오거나 기본값 사용)
 const API_BASE = import.meta.env.VITE_API_BASE || '/support/api';
+
+// 현재 유저 정보 조회
+const fetchCurrentUser = async () => {
+  try {
+    const response = await fetch(`${API_BASE}/user/`, {
+      credentials: 'include',
+    });
+    const data = await response.json();
+    if (data.is_authenticated) {
+      return data.user;
+    }
+    return null;
+  } catch (error) {
+    console.error('Failed to fetch current user:', error);
+    return null;
+  }
+};
 
 // 게시글 작성 컴포넌트
 const PostCreate = ({ onBack, onSubmit, currentUser }) => {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
-  const [resolved, setResolved] = useState(false);
   const [isPrivate, setIsPrivate] = useState(false);
   const [tags, setTags] = useState('');
 
@@ -29,7 +44,6 @@ const PostCreate = ({ onBack, onSubmit, currentUser }) => {
       title,
       content,
       is_private: isPrivate,
-      is_resolved: resolved,
       tags: tags.split(',').map(t => t.trim()).filter(t => t),
     });
   };
@@ -108,18 +122,6 @@ const PostCreate = ({ onBack, onSubmit, currentUser }) => {
                 </button>
               </div>
             </div>
-          </div>
-
-          {/* Resolved Toggle */}
-          <div className="sb-flex sb-items-center sb-justify-between sb-py-2">
-            <span className="sb-text-sm sb-font-semibold sb-text-gray-900">Resolved</span>
-            <button
-              type="button"
-              onClick={() => setResolved(!resolved)}
-              className={`sb-w-12 sb-h-7 sb-rounded-full sb-transition-colors ${resolved ? 'sb-bg-emerald-500' : 'sb-bg-gray-200'}`}
-            >
-              <div className={`sb-w-5 sb-h-5 sb-bg-white sb-rounded-full sb-shadow-sm sb-transition-transform ${resolved ? 'sb-translate-x-6' : 'sb-translate-x-1'}`} />
-            </button>
           </div>
 
           {/* Private Toggle */}
@@ -369,21 +371,14 @@ const BoardList = () => {
     }
   };
 
-  // 컴포넌트 마운트 시 게시글 가져오기 및 유저 동기화 시작
+  // 컴포넌트 마운트 시 게시글 가져오기 및 유저 정보 조회
   useEffect(() => {
     fetchPosts();
 
-    // 기존 세션에서 유저 정보 확인
-    getCurrentUser().then(user => {
-      if (user) setCurrentUser(user);
-    });
-
-    // WebSocket 유저 동기화 폴링 시작 (10분마다)
-    const stopPolling = startUserSyncPolling((user) => {
+    // 현재 유저 정보 조회
+    fetchCurrentUser().then(user => {
       setCurrentUser(user);
     });
-
-    return () => stopPolling();
   }, []);
 
   // 검색 실행 (디바운스 적용)
@@ -422,7 +417,6 @@ const BoardList = () => {
           title: newPost.title,
           content: newPost.content,
           tags: newPost.tags || [],
-          is_resolved: newPost.is_resolved || false,
           is_private: newPost.is_private || false,
         }),
       });

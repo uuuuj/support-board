@@ -12,9 +12,8 @@ RUN npm run build
 # Stage 2: Nginx
 FROM nginx:alpine
 
-# 기본 설정 제거 후 커스텀 설정 복사
-RUN rm /etc/nginx/conf.d/default.conf
-COPY nginx.conf /etc/nginx/conf.d/
+# 기본 설정을 커스텀 설정으로 교체
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # 빌드된 정적 파일 복사
 COPY --from=builder /app/dist /usr/share/nginx/html

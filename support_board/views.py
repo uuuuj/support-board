@@ -83,6 +83,39 @@ def serialize_post_with_access(post: Post, current_user: Optional[dict]) -> dict
     return data
 
 
+# ============ 유저 API ============
+
+@extend_schema(
+    summary='현재 로그인 사용자 조회',
+    description='세션에서 현재 로그인한 사용자 정보를 조회합니다.',
+    responses={
+        200: OpenApiResponse(description='사용자 정보'),
+    }
+)
+@api_view(['GET'])
+def api_current_user(request: HttpRequest) -> Response:
+    """현재 로그인한 사용자 정보를 반환합니다.
+
+    Args:
+        request: HTTP 요청 객체.
+
+    Returns:
+        Response: 사용자 정보 (로그인 안 됐으면 is_authenticated: false).
+    """
+    current_user = get_current_user(request)
+
+    if not current_user:
+        return Response({
+            'is_authenticated': False,
+            'user': None
+        })
+
+    return Response({
+        'is_authenticated': True,
+        'user': current_user
+    })
+
+
 # ============ 게시글 API ============
 
 @extend_schema(

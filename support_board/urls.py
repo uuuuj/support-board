@@ -5,6 +5,9 @@ from . import views
 app_name = 'support_board'
 
 urlpatterns = [
+    # API - User
+    path('api/user/', views.api_current_user, name='api_current_user'),
+
     # API - Posts
     path('api/posts/', views.api_posts_list, name='api_posts_list'),
     path('api/posts/create/', views.api_posts_create, name='api_posts_create'),
